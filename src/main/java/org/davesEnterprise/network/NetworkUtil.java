@@ -14,7 +14,7 @@ import java.nio.file.StandardCopyOption;
 
 public class NetworkUtil {
 
-    public static Path obtainFilePath(String location, Path outputDir, String fileName, int retries) {
+    public static Path obtainFile(String location, Path outputDir, String fileName, int retries) {
         Path filePath;
         if (isURL(location)) {
             try {

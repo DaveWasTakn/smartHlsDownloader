@@ -21,10 +21,11 @@ import java.util.logging.Logger;
 public class DownloaderBuilder {
 
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
+
     private final Path outputDir;
     private int retries = 10;
-
     private List<MediaPlaylist> playlists = new ArrayList<>();
+    private String playlistLocation;
 
     public DownloaderBuilder() {
         this(new SimpleDateFormat("yyyy-MM-dd hh-mm-ss").format(new Date()));
@@ -45,12 +46,13 @@ public class DownloaderBuilder {
     }
 
     public DownloaderBuilder setPlaylist(String playlistLocation) throws RuntimeException {
+        this.playlistLocation = playlistLocation;
         try {
-            final Path playlistPath = obtainPlaylistPath(playlistLocation, "multiVariantPlaylist.txt");
+            final Path playlistPath = obtainPlaylist(playlistLocation, "multiVariantPlaylist.txt");
             MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
             System.out.println(multivariantPlaylist);
             this.playlists = multivariantPlaylist.variants().stream()
-                    .sorted(Comparator.comparingLong(Variant::bandwidth))
+                    .sorted(Comparator.comparingLong(Variant::bandwidth).reversed())
                     .map(variant -> {
                         String variantUri = variant.uri();
                         if (NetworkUtil.isURL(playlistLocation) && !NetworkUtil.isURL(variantUri)) {
@@ -61,7 +63,7 @@ public class DownloaderBuilder {
                     .toList();
         } catch (IOException e) {
             LOGGER.warning("Supplied playlist does not seem to be a MultiVariantPlaylist!");
-            final Path playlistPath = obtainPlaylistPath(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
+            final Path playlistPath = obtainPlaylist(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
             this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
             LOGGER.warning("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
         }
@@ -69,12 +71,12 @@ public class DownloaderBuilder {
     }
 
     private MediaPlaylist parseMediaPlaylist(String playlistLocation, String fileName) {
-        Path playlistPath = obtainPlaylistPath(playlistLocation, fileName);
+        Path playlistPath = obtainPlaylist(playlistLocation, fileName);
         return DownloaderBuilder.parseMediaPlaylist(playlistPath);
     }
 
-    private Path obtainPlaylistPath(String playlistLocation, String fileName) {
-        return NetworkUtil.obtainFilePath(playlistLocation, this.outputDir, fileName, this.retries);
+    private Path obtainPlaylist(String playlistLocation, String fileName) {
+        return NetworkUtil.obtainFile(playlistLocation, this.outputDir, fileName, this.retries);
     }
 
     private static MediaPlaylist parseMediaPlaylist(Path playlistPath) {
@@ -85,13 +87,14 @@ public class DownloaderBuilder {
         }
     }
 
-    public void setRetries(int retries) {
+    public DownloaderBuilder setRetries(int retries) {
         this.retries = retries;
+        return this;
     }
 
-//    public Downloader create() {
-//        // TODO check which Downloader to create
-////        return new HLSDownloader(playlists);
-//    }
+    public Downloader create() {
+        // TODO check which Downloader to create
+        return new AdaptiveHlsDownloader(this.playlists, this.playlistLocation, this.outputDir, this.retries);
+    }
 
 }
