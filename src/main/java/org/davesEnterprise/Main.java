@@ -7,7 +7,7 @@ import java.nio.file.Path;
 public class Main {
     public static void main(String[] args) {
 
-        new DownloaderBuilder().setPlaylist(Path.of(args[0]));
+        new DownloaderBuilder().setPlaylist(args[0]);
 
     }
 

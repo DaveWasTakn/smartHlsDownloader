@@ -2,12 +2,42 @@ package org.davesEnterprise.network;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 
 public class NetworkUtil {
+
+    public static Path obtainFilePath(String location, Path outputDir, String fileName, int retries) {
+        Path filePath;
+        if (isURL(location)) {
+            try {
+                filePath = NetworkUtil.downloadResource(new URI(location).toURL(), outputDir, fileName, retries);
+            } catch (URISyntaxException | MalformedURLException e) {
+                throw new RuntimeException(e); // TODO how to allow for fkd up urls ? be more lenient !!!!!
+            }
+        } else {
+            Path source = Path.of(location);
+            filePath = Path.of(String.valueOf(outputDir), fileName);
+            try {
+                Files.copy(source, filePath, StandardCopyOption.REPLACE_EXISTING);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return filePath;
+    }
+
+    public static boolean isURL(String loc) {
+        loc = loc.trim().toLowerCase();
+        return loc.startsWith("http:") || loc.startsWith("https:");
+    }
 
     public static Path downloadResource(URL url, Path outputDir, String fileName, int retries) throws OutOfRetriesException {
         if (retries < 1) {

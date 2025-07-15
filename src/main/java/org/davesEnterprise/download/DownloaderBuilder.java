@@ -5,8 +5,10 @@ import io.lindstrom.m3u8.model.MultivariantPlaylist;
 import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
+import org.davesEnterprise.network.NetworkUtil;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.SimpleDateFormat;
@@ -20,6 +22,7 @@ public class DownloaderBuilder {
 
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
     private final Path outputDir;
+    private int retries = 10;
 
     private List<MediaPlaylist> playlists = new ArrayList<>();
 
@@ -41,21 +44,37 @@ public class DownloaderBuilder {
         }
     }
 
-    public DownloaderBuilder setPlaylist(Path playlistPath) throws RuntimeException {
+    public DownloaderBuilder setPlaylist(String playlistLocation) throws RuntimeException {
         try {
+            final Path playlistPath = obtainPlaylistPath(playlistLocation, "multiVariantPlaylist.txt");
             MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
             System.out.println(multivariantPlaylist);
             this.playlists = multivariantPlaylist.variants().stream()
                     .sorted(Comparator.comparingLong(Variant::bandwidth))
-                    .map(Variant::uri)
-                    .map(Path::of) // TODO should be URL, right? and then download it and then i have the path for the parseMediaPlaylist method?
-                    .map(DownloaderBuilder::parseMediaPlaylist)
+                    .map(variant -> {
+                        String variantUri = variant.uri();
+                        if (NetworkUtil.isURL(playlistLocation) && !NetworkUtil.isURL(variantUri)) {
+                            variantUri = URI.create(playlistLocation).resolve(variantUri).toString();
+                        }
+                        return this.parseMediaPlaylist(variantUri, String.valueOf(variant.bandwidth()));
+                    })
                     .toList();
         } catch (IOException e) {
+            LOGGER.warning("Supplied playlist does not seem to be a MultiVariantPlaylist!");
+            final Path playlistPath = obtainPlaylistPath(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
+            this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
             LOGGER.warning("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
-            this.playlists.add(parseMediaPlaylist(playlistPath));
         }
         return this;
+    }
+
+    private MediaPlaylist parseMediaPlaylist(String playlistLocation, String fileName) {
+        Path playlistPath = obtainPlaylistPath(playlistLocation, fileName);
+        return DownloaderBuilder.parseMediaPlaylist(playlistPath);
+    }
+
+    private Path obtainPlaylistPath(String playlistLocation, String fileName) {
+        return NetworkUtil.obtainFilePath(playlistLocation, this.outputDir, fileName, this.retries);
     }
 
     private static MediaPlaylist parseMediaPlaylist(Path playlistPath) {
@@ -64,6 +83,10 @@ public class DownloaderBuilder {
         } catch (IOException ex) {
             throw new RuntimeException(ex);
         }
+    }
+
+    public void setRetries(int retries) {
+        this.retries = retries;
     }
 
 //    public Downloader create() {
