@@ -23,6 +23,7 @@ public class DownloaderBuilder {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     private final Path outputDir;
+    private final Path playlistsOutputDir;
     private int retries = 10;
     private List<MediaPlaylist> playlists = new ArrayList<>();
     private String playlistLocation;
@@ -37,9 +38,10 @@ public class DownloaderBuilder {
 
     public DownloaderBuilder(Path outputDir) {
         this.outputDir = outputDir;
+        this.playlistsOutputDir = outputDir.resolve("playlists");
 
         try {
-            Files.createDirectories(this.outputDir);
+            Files.createDirectories(this.playlistsOutputDir);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -76,7 +78,7 @@ public class DownloaderBuilder {
     }
 
     private Path obtainPlaylist(String playlistLocation, String fileName) {
-        return NetworkUtil.obtainFile(playlistLocation, this.outputDir, fileName, this.retries);
+        return NetworkUtil.obtainFile(playlistLocation, this.playlistsOutputDir, fileName, this.retries);
     }
 
     private static MediaPlaylist parseMediaPlaylist(Path playlistPath) {
