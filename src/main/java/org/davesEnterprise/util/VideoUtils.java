@@ -14,7 +14,7 @@ public class VideoUtils {
         Path fileList = VideoUtils.createFileList(segmentsDirectory);
 
         try {
-            Process process = new ProcessBuilder("ffmpeg", "-f", "concat", "-safe", "0", "-i", fileList.toAbsolutePath().toString(), "-c", "copy", outputFilePath.toAbsolutePath().toString())
+            Process process = new ProcessBuilder("ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", fileList.toAbsolutePath().toString(), "-c", "copy", outputFilePath.toAbsolutePath().toString())
                     .redirectErrorStream(true)
                     .directory(workingDirectory.toFile())
                     .start();
