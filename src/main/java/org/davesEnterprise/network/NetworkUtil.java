@@ -1,18 +1,20 @@
 package org.davesEnterprise.network;
 
+import org.davesEnterprise.download.DownloaderBuilder;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.net.*;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.logging.Logger;
 
 public class NetworkUtil {
+
+    private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     public static Path obtainFile(String location, Path outputDir, String fileName, int retries) {
         Path filePath;
@@ -46,31 +48,27 @@ public class NetworkUtil {
 
         try {
             return download(url, outputDir, fileName);
-        } catch (OutOfRetriesException e) {
+        } catch (IOException e) {
+            LOGGER.warning("Failed attempt to download " + url + ": " + e.getMessage());
             return downloadResource(url, outputDir, fileName, retries - 1);
         }
     }
 
-    public static Path downloadResource(URL url, Path outputDir, int retries) throws OutOfRetriesException {
-        return downloadResource(url, outputDir, url.getFile(), retries);
-    }
+    private static Path download(URL url, Path outputDir, String fileName) throws IOException {
+        Path outputPath = outputDir.resolve(fileName);
 
-    private static Path download(URL url, Path outputDir, String fileName) {
-        try {
-            ReadableByteChannel rbc = Channels.newChannel(url.openStream());
-            Path outputPath = outputDir.resolve(fileName);
-            FileOutputStream fos = new FileOutputStream(outputPath.toFile());
+        URLConnection conn = url.openConnection();
+        conn.setConnectTimeout(2_000);
+        conn.setReadTimeout(2_000);
+
+        try (
+                ReadableByteChannel rbc = Channels.newChannel(conn.getInputStream());
+                FileOutputStream fos = new FileOutputStream(outputPath.toFile())
+        ) {
             fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-            fos.close();
-            rbc.close();
-            return outputPath;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
         }
-    }
 
-    private static Path download(URL url, Path outputDir) {
-        return download(url, outputDir, url.getFile());
+        return outputPath;
     }
 
 }
