@@ -29,7 +29,7 @@ public class DownloaderBuilder {
     private String playlistLocation;
 
     public DownloaderBuilder() {
-        this(new SimpleDateFormat("yyyy-MM-dd hh-mm-ss").format(new Date()));
+        this(new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date()));
     }
 
     public DownloaderBuilder(String outputDir) {
@@ -51,8 +51,8 @@ public class DownloaderBuilder {
         this.playlistLocation = playlistLocation;
         try {
             final Path playlistPath = obtainPlaylist(playlistLocation, "multiVariantPlaylist.txt");
-            MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
-            System.out.println(multivariantPlaylist);
+            final MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
+            System.out.println(multivariantPlaylist); // TODO print some info/stats i.e. how many variants or smth
             this.playlists = multivariantPlaylist.variants().stream()
                     .sorted(Comparator.comparingLong(Variant::bandwidth).reversed())
                     .map(variant -> {
@@ -73,7 +73,7 @@ public class DownloaderBuilder {
     }
 
     private MediaPlaylist parseMediaPlaylist(String playlistLocation, String fileName) {
-        Path playlistPath = obtainPlaylist(playlistLocation, fileName);
+        final Path playlistPath = obtainPlaylist(playlistLocation, fileName);
         return DownloaderBuilder.parseMediaPlaylist(playlistPath);
     }
 
