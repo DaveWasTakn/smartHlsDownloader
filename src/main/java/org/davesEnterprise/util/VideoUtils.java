@@ -114,15 +114,21 @@ What does this achieve?
 //                    "-f", "hls",
 //                    "-i", newPlaylistPath.toAbsolutePath().toString(),
 //                    "-c", "copy", videoFilePath.toAbsolutePath().toString()
+//                    "ffmpeg", "-y",
+//                    "-allowed_extensions", "ALL",
+//                    "-f", "hls",
+//                    "-i", newPlaylistPath.toAbsolutePath().toString(),
+//                    "-c:v", "libx264",
+//                    "-preset", "fast",
+//                    "-crf", "23",
+//                    "-c:a", "aac",
+//                    "-b:a", "128k",
+//                    videoFilePath.toAbsolutePath().toString()
                     "ffmpeg", "-y",
                     "-allowed_extensions", "ALL",
                     "-f", "hls",
                     "-i", newPlaylistPath.toAbsolutePath().toString(),
-                    "-c:v", "libx264",
-                    "-preset", "fast",
-                    "-crf", "23",
-                    "-c:a", "aac",
-                    "-b:a", "128k",
+                    "-c", "copy",
                     videoFilePath.toAbsolutePath().toString()
             )
                     .redirectErrorStream(true)

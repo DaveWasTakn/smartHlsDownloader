@@ -7,7 +7,7 @@ public class Main {
     public static void main(String[] args) {
 
         Downloader downloader = new DownloaderBuilder()
-                .setRetries(10)
+                .setRetries(50)
                 .setPlaylist(args[0])
                 .create();
 

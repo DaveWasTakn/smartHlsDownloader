@@ -1,12 +1,13 @@
 package org.davesEnterprise.network;
 
+import org.apache.commons.io.FileUtils;
 import org.davesEnterprise.download.DownloaderBuilder;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.*;
-import java.nio.channels.Channels;
-import java.nio.channels.ReadableByteChannel;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -49,25 +50,15 @@ public class NetworkUtil {
         try {
             return download(url, outputDir, fileName);
         } catch (IOException e) {
-            LOGGER.warning("Failed attempt to download " + url + ": " + e.getMessage());
+            LOGGER.warning("Failed attempt to download " + url + " (" + retries + " retries left) : " + e.getMessage());
             return downloadResource(url, outputDir, fileName, retries - 1);
         }
     }
 
     private static Path download(URL url, Path outputDir, String fileName) throws IOException {
         Path outputPath = outputDir.resolve(fileName);
-
-        URLConnection conn = url.openConnection();
-        conn.setConnectTimeout(5_000);
-        conn.setReadTimeout(5_000);
-
-        try (
-                ReadableByteChannel rbc = Channels.newChannel(conn.getInputStream());
-                FileOutputStream fos = new FileOutputStream(outputPath.toFile())
-        ) {
-            fos.getChannel().transferFrom(rbc, 0, Long.MAX_VALUE);
-        }
-
+        Files.deleteIfExists(outputPath);
+        FileUtils.copyURLToFile(url, outputPath.toFile(), 10000, 10000);
         return outputPath;
     }
 

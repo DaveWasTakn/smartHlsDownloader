@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
@@ -62,13 +63,20 @@ public class AdaptiveHlsDownloader implements Downloader {
                 .gather(new TransposeGatherer<>())
                 .toList();
 
+        Semaphore sem = new Semaphore(10); // TODO make configurable
+
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             executor.invokeAll(
                     IntStream.range(0, this.maxSegments)
                             .<Callable<Void>>mapToObj(i -> () -> {
-                                final List<MediaSegment> segment = segmentsTransposed.get(i);
-                                this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
-                                return null;
+                                sem.acquire();
+                                try {
+                                    final List<MediaSegment> segment = segmentsTransposed.get(i);
+                                    this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
+                                    return null;
+                                } finally {
+                                    sem.release();
+                                }
                             })
                             .toList()
             );
