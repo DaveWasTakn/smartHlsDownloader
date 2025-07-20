@@ -76,7 +76,11 @@ public class AdaptiveHlsDownloader implements Downloader {
             throw new RuntimeException(e);
         }
 
-        VideoUtils.mergeSegments(this.outputDir, this.segmentsDir, this.outputDir.resolve("video.mp4"));
+//        VideoUtils.mergeSegments(this.outputDir, this.segmentsDir, this.outputDir.resolve("video.mp4"));
+
+        Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
+
+        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve("video.mp4"));
     }
 
 

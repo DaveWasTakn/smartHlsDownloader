@@ -58,8 +58,8 @@ public class NetworkUtil {
         Path outputPath = outputDir.resolve(fileName);
 
         URLConnection conn = url.openConnection();
-        conn.setConnectTimeout(2_000);
-        conn.setReadTimeout(2_000);
+        conn.setConnectTimeout(5_000);
+        conn.setReadTimeout(5_000);
 
         try (
                 ReadableByteChannel rbc = Channels.newChannel(conn.getInputStream());
