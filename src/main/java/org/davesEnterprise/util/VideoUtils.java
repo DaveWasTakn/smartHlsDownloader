@@ -3,6 +3,7 @@ package org.davesEnterprise.util;
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
+import org.davesEnterprise.download.DownloaderBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -11,10 +12,13 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class VideoUtils {
+
+    private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     public static Path adjustPlaylist(MediaPlaylist playlist, Path outputDir) {
         List<MediaSegment> segments = playlist.mediaSegments();
@@ -41,20 +45,8 @@ public class VideoUtils {
         Path fileList = VideoUtils.createFileList(segmentsDirectory);
 
         try {
-            Process process = new ProcessBuilder("ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", fileList.toAbsolutePath().toString(), "-c", "copy", outputFilePath.toAbsolutePath().toString())
-                    .redirectErrorStream(true)
-                    .directory(workingDirectory.toFile())
-                    .start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            }
-
-            int exitCode = process.waitFor();
-            System.out.println("FFmpeg exited with code: " + exitCode);
+            String[] cmd = {"ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", fileList.toAbsolutePath().toString(), "-c", "copy", outputFilePath.toAbsolutePath().toString()};
+            executeCmd(workingDirectory, cmd);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
@@ -80,30 +72,36 @@ public class VideoUtils {
     public static void mergePlaylist(Path newPlaylistPath, Path workingDir, Path videoFilePath) {
         // TODO handle missing segments!!!!!!!!!!
         try {
-            Process process = new ProcessBuilder(
+            String[] cmd = {
                     "ffmpeg", "-y",
                     "-allowed_extensions", "ALL",
                     "-f", "hls",
                     "-i", newPlaylistPath.toAbsolutePath().toString(),
                     "-c", "copy",
                     videoFilePath.toAbsolutePath().toString()
-            )
-                    .redirectErrorStream(true)
-                    .directory(workingDir.toFile())
-                    .start();
-
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    System.out.println(line);
-                }
-            }
-
-            int exitCode = process.waitFor();
-            System.out.println("FFmpeg exited with code: " + exitCode);
+            };
+            executeCmd(workingDir, cmd);
         } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static void executeCmd(Path workingDir, String[] cmd) throws IOException, InterruptedException {
+        LOGGER.info("Executing command: " + String.join(" ", cmd));
+        Process process = new ProcessBuilder(cmd)
+                .redirectErrorStream(true)
+                .directory(workingDir.toFile())
+                .start();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        }
+
+        int exitCode = process.waitFor();
+        System.out.println("FFmpeg exited with code: " + exitCode);
     }
 
 }
