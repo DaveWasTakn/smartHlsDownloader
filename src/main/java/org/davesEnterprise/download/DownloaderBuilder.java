@@ -23,21 +23,25 @@ public class DownloaderBuilder {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     private final Path outputDir;
+    private String fileName;
     private final Path playlistsOutputDir;
     private int retries = 10;
     private List<MediaPlaylist> playlists = new ArrayList<>();
     private String playlistLocation;
+    private int concurrency;
+    private boolean resume;
 
     public DownloaderBuilder() {
-        this(new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date()));
+        this(getCurrentDateTime());
     }
 
-    public DownloaderBuilder(String outputDir) {
-        this(Path.of(outputDir));
+    public DownloaderBuilder(String output) {
+        this(output != null ? Path.of(output) : Path.of(getCurrentDateTime()));
     }
 
     public DownloaderBuilder(Path outputDir) {
-        this.outputDir = outputDir;
+        this.fileName = outputDir.getFileName().toString();
+        this.outputDir = outputDir.toAbsolutePath();
         this.playlistsOutputDir = outputDir.resolve("playlists");
 
         try {
@@ -45,6 +49,10 @@ public class DownloaderBuilder {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private static String getCurrentDateTime() {
+        return new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
     }
 
     public DownloaderBuilder setPlaylist(String playlistLocation) throws RuntimeException {
@@ -94,9 +102,19 @@ public class DownloaderBuilder {
         return this;
     }
 
-    public Downloader create() {
+    public DownloaderBuilder setConcurrency(int concurrency) {
+        this.concurrency = concurrency;
+        return this;
+    }
+
+    public DownloaderBuilder setResume(boolean resume) {
+        this.resume = resume;
+        return this;
+    }
+
+    public Downloader build() {
         // TODO check which Downloader to create
-        return new AdaptiveHlsDownloader(this.playlists, this.playlistLocation, this.outputDir, this.retries);
+        return new AdaptiveHlsDownloader(this.playlists, this.playlistLocation, this.outputDir, this.retries, this.concurrency, this.resume, this.fileName);
     }
 
 }

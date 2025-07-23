@@ -27,6 +27,9 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     private final List<MediaPlaylist> playlists;
+    private final int concurrency;
+    private final boolean resume;
+    private final String fileName;
     private final URI playlistLocation;
     private final boolean playlistIsUrl;
     private final Path outputDir;
@@ -36,8 +39,11 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final int maxSegments;
     private final AtomicInteger numSegments = new AtomicInteger(0);
 
-    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries) {
+    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrency, boolean resume, String fileName) {
         this.playlists = playlists;
+        this.concurrency = concurrency;
+        this.resume = resume;
+        this.fileName = fileName;
         try {
             this.playlistLocation = new URI(playlistLocation);
             this.playlistIsUrl = NetworkUtil.isURL(playlistLocation);
@@ -63,7 +69,7 @@ public class AdaptiveHlsDownloader implements Downloader {
                 .gather(new TransposeGatherer<>())
                 .toList();
 
-        Semaphore sem = new Semaphore(10); // TODO make configurable
+        Semaphore sem = new Semaphore(this.concurrency);
 
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             executor.invokeAll(
@@ -88,7 +94,7 @@ public class AdaptiveHlsDownloader implements Downloader {
 
         Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
 
-        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve("video.mp4"));
+        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
     }
 
 
@@ -125,5 +131,7 @@ public class AdaptiveHlsDownloader implements Downloader {
         final int idx = this.numSegments.incrementAndGet();
         LOGGER.info("|| " + String.format("%5.1f%%", ((float) idx / this.maxSegments) * 100) + " || - Downloaded segment " + (index + 1));
     }
+
+
 }
 
