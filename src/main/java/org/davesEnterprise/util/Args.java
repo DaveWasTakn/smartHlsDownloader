@@ -12,7 +12,7 @@ public class Args {
             names = {"-c", "--concurrency"},
             description = "Number of concurrent segments to download"
     )
-    public int concurrency = 8;
+    public int concurrency = 10;
 
     @Parameter(
             names = {"-o", "--output"},
