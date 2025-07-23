@@ -2,6 +2,7 @@ package org.davesEnterprise.util;
 
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
+import com.beust.jcommander.ParameterException;
 
 public class Args {
 
@@ -21,10 +22,14 @@ public class Args {
 
     @Parameter(
             names = {"-i", "--input"},
-            description = "URL or URI of the HLS playlist",
-            required = true
+            description = "URL or URI of the HLS playlist"
     )
     public String playlistUrl;
+
+    @Parameter(
+            description = "URL or URI of the HLS playlist"
+    )
+    public String mainParameter;
 
     @Parameter(
             names = {"--continue"},
@@ -62,5 +67,11 @@ public class Args {
                 .addObject(INSTANCE)
                 .build()
                 .parse(argv);
+
+        if (INSTANCE.playlistUrl == null && INSTANCE.mainParameter == null) {
+            throw new ParameterException("Missing required input parameter!");
+        } else if (INSTANCE.playlistUrl == null) {
+            INSTANCE.playlistUrl = INSTANCE.mainParameter;
+        }
     }
 }
