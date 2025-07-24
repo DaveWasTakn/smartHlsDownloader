@@ -50,7 +50,7 @@ public class Args {
             names = {"-sv", "--skip-validation"},
             description = "Whether to skip validation of each segment"
     )
-    public boolean skipValidation = true;
+    public boolean skipValidation = false;
 
     @Parameter(
             names = {"-ev", "--extra-validation"},

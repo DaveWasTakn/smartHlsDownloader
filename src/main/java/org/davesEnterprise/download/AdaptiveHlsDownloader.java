@@ -97,11 +97,13 @@ public class AdaptiveHlsDownloader implements Downloader {
                                             () -> {
                                                 try {
                                                     validationSem.acquire();
-                                                    boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation);
-                                                    if (!isValid) {
+//                                                    LOGGER.info("Validating segment " + i);
+                                                    if (!this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation)) {
+                                                        LOGGER.warning("Segment " + i + " is invalid! Retrying download");
                                                         this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
                                                     }
                                                 } catch (InterruptedException e) {
+                                                    Thread.currentThread().interrupt();
                                                     throw new RuntimeException(e);
                                                 } finally {
                                                     validationSem.release();
@@ -119,18 +121,17 @@ public class AdaptiveHlsDownloader implements Downloader {
             );
             validationFutures.forEach(CompletableFuture::join);
         } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
     }
 
     private boolean validateSegment(Path segmentPath, SegmentValidation segmentValidation) {
-        // TODO validate segment using ffprobe / ffmpeg given the segmentValidation type (or not)
-        try {
-            Thread.sleep(2000);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return true;
+        return switch (segmentValidation) {
+            case NONE -> true;
+            case METADATA -> VideoUtils.checkSegmentMetadata(segmentPath);
+            case DECODE -> VideoUtils.checkSegmentMetadata(segmentPath) && VideoUtils.checkSegmentDecoding(segmentPath);
+        };
     }
 
     private void mergePlaylist() {

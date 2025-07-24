@@ -7,6 +7,7 @@ import org.davesEnterprise.download.DownloaderBuilder;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,8 +47,11 @@ public class VideoUtils {
 
         try {
             String[] cmd = {"ffmpeg", "-y", "-f", "concat", "-safe", "0", "-i", fileList.toAbsolutePath().toString(), "-c", "copy", outputFilePath.toAbsolutePath().toString()};
-            executeCmd(workingDirectory, cmd);
-        } catch (IOException | InterruptedException e) {
+            executeCmd(workingDirectory, cmd, false);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -80,56 +84,77 @@ public class VideoUtils {
                     "-c", "copy",
                     videoFilePath.toAbsolutePath().toString()
             };
-            executeCmd(workingDir, cmd);
-        } catch (IOException | InterruptedException e) {
+            LOGGER.info("Executing command: " + String.join(" ", cmd));
+            if (executeCmd(workingDir, cmd, false) == 0) {
+                LOGGER.info("Done! Video created at: " + videoFilePath.toAbsolutePath());
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-
-    private static boolean isSegmentValid(Path workingDir, String segmentFileName) {
+    public static boolean checkSegmentMetadata(Path segmentPath) {
+        String[] cmd = {
+                "ffprobe",
+                "-v", "error",
+                "-show_format",
+                "-show_streams",
+                segmentPath.toAbsolutePath().toString(),
+        };
         try {
-            String[] cmd = {
-                    "ffprobe",
-                    "-v", "error",
-                    "-f", "mpegts",
-                    "-show_format",
-                    "-show_streams",
-                    segmentFileName
-            };
-
-//        LOGGER.info("Executing command: " + String.join(" ", cmd));
-            Process process = new ProcessBuilder(cmd)
-                    .redirectErrorStream(true)
-                    .directory(workingDir.toFile())
-                    .start();
-
-            int exitCode = process.waitFor();
-//        LOGGER.info("FFprobe exited with code: " + exitCode);
-
-            return exitCode == 0;
-        } catch (IOException | InterruptedException e) {
+            return executeCmd(segmentPath.getParent(), cmd, false) == 0;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
+    public static boolean checkSegmentDecoding(Path segmentPath) {
+        String[] cmd = {
+                "ffmpeg",
+                "-v", "error",
+                "-xerror",
+                "-i", segmentPath.toAbsolutePath().toString(),
+                "-f", "null", "-"
+        };
+        try {
+            return executeCmd(segmentPath.getParent(), cmd, false) == 0;
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
-    private static void executeCmd(Path workingDir, String[] cmd) throws IOException, InterruptedException {
-        LOGGER.info("Executing command: " + String.join(" ", cmd));
+    private static int executeCmd(Path workingDir, String[] cmd, boolean printOutput) throws IOException, InterruptedException {
         Process process = new ProcessBuilder(cmd)
                 .redirectErrorStream(true)
                 .directory(workingDir.toFile())
                 .start();
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
+        if (printOutput) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    System.out.println(line);
+                }
+            }
+        } else {
+            try (InputStream is = process.getInputStream()) {
+                byte[] buffer = new byte[8192];
+                while (is.read(buffer) != -1) {
+                    // discard stream
+                }
             }
         }
 
-        int exitCode = process.waitFor();
-        System.out.println("FFmpeg exited with code: " + exitCode);
+        return process.waitFor();
     }
 
 }
