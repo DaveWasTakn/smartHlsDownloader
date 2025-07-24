@@ -6,15 +6,19 @@ import org.davesEnterprise.util.Args;
 
 public class Main {
     public static void main(String[] args) {
-        Args.init(args);
-
         // TODO GUI :-)
+        // TODO adaptiveness ? ie lower quality segments
 
-        Downloader downloader = new DownloaderBuilder(Args.get().output)
-                .setRetries(Args.get().retries)
-                .setPlaylist(Args.get().playlistUrl)
-                .setConcurrency(Args.get().concurrency)
-                .setResume(Args.get().resume)
+        Args.init(args);
+        Args arguments = Args.get();
+
+        Downloader downloader = new DownloaderBuilder(arguments.output)
+                .setRetries(arguments.retries)
+                .setPlaylist(arguments.playlistUrl)
+                .setConcurrentDownloads(arguments.concurrentDownloads)
+                .setConcurrentValidations(arguments.concurrentValidations)
+                .setResume(arguments.resume) // TODO implement resume functionality ?
+                .setSegmentValidation(arguments.segmentValidation)
                 .build();
 
         downloader.start();

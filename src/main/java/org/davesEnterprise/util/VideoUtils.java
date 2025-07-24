@@ -86,6 +86,34 @@ public class VideoUtils {
         }
     }
 
+
+    private static boolean isSegmentValid(Path workingDir, String segmentFileName) {
+        try {
+            String[] cmd = {
+                    "ffprobe",
+                    "-v", "error",
+                    "-f", "mpegts",
+                    "-show_format",
+                    "-show_streams",
+                    segmentFileName
+            };
+
+//        LOGGER.info("Executing command: " + String.join(" ", cmd));
+            Process process = new ProcessBuilder(cmd)
+                    .redirectErrorStream(true)
+                    .directory(workingDir.toFile())
+                    .start();
+
+            int exitCode = process.waitFor();
+//        LOGGER.info("FFprobe exited with code: " + exitCode);
+
+            return exitCode == 0;
+        } catch (IOException | InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
     private static void executeCmd(Path workingDir, String[] cmd) throws IOException, InterruptedException {
         LOGGER.info("Executing command: " + String.join(" ", cmd));
         Process process = new ProcessBuilder(cmd)

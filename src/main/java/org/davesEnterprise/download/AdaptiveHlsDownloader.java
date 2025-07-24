@@ -2,6 +2,7 @@ package org.davesEnterprise.download;
 
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
+import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 import org.davesEnterprise.network.OutOfRetriesException;
 import org.davesEnterprise.util.TransposeGatherer;
@@ -13,13 +14,11 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.Set;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
@@ -27,7 +26,9 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     private final List<MediaPlaylist> playlists;
-    private final int concurrency;
+    private final int concurrentDownloads;
+    private final int concurrentValidations;
+    private final SegmentValidation segmentValidation;
     private final boolean resume;
     private final String fileName;
     private final URI playlistLocation;
@@ -37,11 +38,13 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final int retries;
 
     private final int maxSegments;
-    private final AtomicInteger numSegments = new AtomicInteger(0);
+    private final Set<Integer> downloadedSegments = ConcurrentHashMap.newKeySet();
 
-    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrency, boolean resume, String fileName) {
+    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume) {
         this.playlists = playlists;
-        this.concurrency = concurrency;
+        this.concurrentDownloads = concurrentDownloads;
+        this.concurrentValidations = concurrentValidations;
+        this.segmentValidation = segmentValidation;
         this.resume = resume;
         this.fileName = fileName;
         try {
@@ -69,34 +72,71 @@ public class AdaptiveHlsDownloader implements Downloader {
                 .gather(new TransposeGatherer<>())
                 .toList();
 
-        Semaphore sem = new Semaphore(this.concurrency);
+        download(segmentsTransposed);
+        mergePlaylist();
+    }
 
-        try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            executor.invokeAll(
+    private void download(List<List<MediaSegment>> segmentsTransposed) {
+        Semaphore downloadSem = new Semaphore(this.concurrentDownloads);
+        Semaphore validationSem = new Semaphore(this.concurrentValidations);
+
+        List<CompletableFuture<Void>> validationFutures = new ArrayList<>();
+
+        try (ExecutorService downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
+             ExecutorService validationExecutor = Executors.newVirtualThreadPerTaskExecutor()
+        ) {
+            downloadExecutor.invokeAll(
                     IntStream.range(0, this.maxSegments)
                             .<Callable<Void>>mapToObj(i -> () -> {
-                                sem.acquire();
                                 try {
+                                    downloadSem.acquire();
                                     final List<MediaSegment> segment = segmentsTransposed.get(i);
                                     this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
+
+                                    CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
+                                            () -> {
+                                                try {
+                                                    validationSem.acquire();
+                                                    boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation);
+                                                    if (!isValid) {
+                                                        this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
+                                                    }
+                                                } catch (InterruptedException e) {
+                                                    throw new RuntimeException(e);
+                                                } finally {
+                                                    validationSem.release();
+                                                }
+                                            },
+                                            validationExecutor);
+                                    validationFutures.add(validationFuture);
+
                                     return null;
                                 } finally {
-                                    sem.release();
+                                    downloadSem.release();
                                 }
                             })
                             .toList()
             );
+            validationFutures.forEach(CompletableFuture::join);
         } catch (InterruptedException e) {
             throw new RuntimeException(e);
         }
-
-//        VideoUtils.mergeSegments(this.outputDir, this.segmentsDir, this.outputDir.resolve("video.mp4"));
-
-        Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
-
-        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
     }
 
+    private boolean validateSegment(Path segmentPath, SegmentValidation segmentValidation) {
+        // TODO validate segment using ffprobe / ffmpeg given the segmentValidation type (or not)
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
+
+    private void mergePlaylist() {
+        Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
+        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
+    }
 
     private void downloadSegment(MediaSegment segment, int index, List<MediaSegment> alternatives) {
         if (!this.playlistIsUrl) {
@@ -105,15 +145,18 @@ public class AdaptiveHlsDownloader implements Downloader {
             // for which they must ofc be absolute urls
             throw new RuntimeException("Playlist is not a url ... not implemented");
         }
+
         try {
             URI segmentUri = new URI(segment.uri());
-
             if (!segmentUri.isAbsolute()) {
                 segmentUri = this.playlistLocation.resolve(segmentUri);
             }
 
             try {
-                NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, String.format("%0" + String.valueOf(this.maxSegments).length() + "d", index), this.retries);
+                NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, formatSegmentIndex(index, this.maxSegments), this.retries);
+
+                this.downloadedSegments.add(index);
+                LOGGER.info("|| " + String.format("%5.1f%%", ((float) this.downloadedSegments.size() / this.maxSegments) * 100) + " || - Downloaded segment " + (index + 1));
             } catch (OutOfRetriesException e) {
                 LOGGER.warning("Download of media segment" + (index + 1) + " failed - out of retries");
                 if (!alternatives.isEmpty()) {
@@ -128,8 +171,10 @@ public class AdaptiveHlsDownloader implements Downloader {
         } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
-        final int idx = this.numSegments.incrementAndGet();
-        LOGGER.info("|| " + String.format("%5.1f%%", ((float) idx / this.maxSegments) * 100) + " || - Downloaded segment " + (index + 1));
+    }
+
+    private static String formatSegmentIndex(int index, int maxSegments) {
+        return String.format("%0" + String.valueOf(maxSegments).length() + "d", index);
     }
 
 

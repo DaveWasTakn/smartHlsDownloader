@@ -5,6 +5,7 @@ import io.lindstrom.m3u8.model.MultivariantPlaylist;
 import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
+import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 
 import java.io.IOException;
@@ -23,13 +24,16 @@ public class DownloaderBuilder {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
 
     private final Path outputDir;
-    private String fileName;
+    private final String fileName;
     private final Path playlistsOutputDir;
     private int retries = 10;
     private List<MediaPlaylist> playlists = new ArrayList<>();
     private String playlistLocation;
-    private int concurrency;
+    private int concurrentDownloads;
+    private int concurrentValidations;
     private boolean resume;
+    private SegmentValidation segmentValidation;
+
 
     public DownloaderBuilder() {
         this(getCurrentDateTime());
@@ -102,8 +106,13 @@ public class DownloaderBuilder {
         return this;
     }
 
-    public DownloaderBuilder setConcurrency(int concurrency) {
-        this.concurrency = concurrency;
+    public DownloaderBuilder setConcurrentDownloads(int concurrentDownloads) {
+        this.concurrentDownloads = concurrentDownloads;
+        return this;
+    }
+
+    public DownloaderBuilder setConcurrentValidations(int concurrentValidations) {
+        this.concurrentValidations = concurrentValidations;
         return this;
     }
 
@@ -112,9 +121,22 @@ public class DownloaderBuilder {
         return this;
     }
 
-    public Downloader build() {
-        // TODO check which Downloader to create
-        return new AdaptiveHlsDownloader(this.playlists, this.playlistLocation, this.outputDir, this.retries, this.concurrency, this.resume, this.fileName);
+    public DownloaderBuilder setSegmentValidation(SegmentValidation segmentValidation) {
+        this.segmentValidation = segmentValidation;
+        return this;
     }
 
+    public Downloader build() {
+        // TODO check which Downloader to create
+        return new AdaptiveHlsDownloader(this.playlists,
+                this.playlistLocation,
+                this.outputDir,
+                this.retries,
+                this.concurrentDownloads,
+                this.concurrentValidations,
+                this.segmentValidation,
+                this.fileName,
+                this.resume
+        );
+    }
 }

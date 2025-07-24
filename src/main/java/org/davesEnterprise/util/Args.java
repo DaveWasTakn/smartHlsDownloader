@@ -3,16 +3,31 @@ package org.davesEnterprise.util;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.Parameter;
 import com.beust.jcommander.ParameterException;
+import org.davesEnterprise.enums.SegmentValidation;
 
 public class Args {
 
     private static Args INSTANCE;
 
+    public SegmentValidation segmentValidation;
+
     @Parameter(
-            names = {"-c", "--concurrency"},
+            names = {"-c", "--concurrent-downloads"},
             description = "Number of concurrent segments to download"
     )
-    public int concurrency = 10;
+    public int concurrentDownloads = 10;
+
+    @Parameter(
+            names = {"-cv", "--concurrent-validations"},
+            description = "Number of concurrent segments to validate"
+    )
+    public int concurrentValidations = 10;
+
+    @Parameter(
+            names = {"--continue"},
+            description = "Continue downloading in an existing output directory"
+    )
+    public boolean resume = false;
 
     @Parameter(
             names = {"-o", "--output"},
@@ -32,10 +47,16 @@ public class Args {
     public String mainParameter;
 
     @Parameter(
-            names = {"--continue"},
-            description = "Continue downloading in an existing output directory"
+            names = {"-sv", "--skip-validation"},
+            description = "Whether to skip validation of each segment"
     )
-    public boolean resume = false;
+    public boolean skipValidation = true;
+
+    @Parameter(
+            names = {"-ev", "--extra-validation"},
+            description = "Whether to use ffmpeg to decode each segment for additional validation"
+    )
+    public boolean extraValidation = false;
 
     @Parameter(
             names = {"-r", "--retries"},
@@ -73,5 +94,7 @@ public class Args {
         } else if (INSTANCE.playlistUrl == null) {
             INSTANCE.playlistUrl = INSTANCE.mainParameter;
         }
+
+        INSTANCE.segmentValidation = INSTANCE.skipValidation ? SegmentValidation.NONE : (INSTANCE.extraValidation ? SegmentValidation.DECODE : SegmentValidation.METADATA);
     }
 }
