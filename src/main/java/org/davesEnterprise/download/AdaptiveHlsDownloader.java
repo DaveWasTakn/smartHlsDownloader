@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
-import java.util.stream.IntStream;
 
 public class AdaptiveHlsDownloader implements Downloader {
     private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
@@ -84,28 +83,30 @@ public class AdaptiveHlsDownloader implements Downloader {
         List<CompletableFuture<Void>> downloadFutures = new ArrayList<>();
         List<CompletableFuture<Void>> validationFutures = new ArrayList<>();
 
+        final Phaser phaser = new Phaser(1);
+
         try (ExecutorService downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
              ExecutorService validationExecutor = Executors.newVirtualThreadPerTaskExecutor()
         ) {
 
-            IntStream.range(0, this.maxSegments)
-                    .<Runnable>mapToObj(i ->
-                            () -> downloadTask(
-                                    segmentsTransposed.get(i),
-                                    i,
-                                    downloadSem,
-                                    validationSem,
-                                    downloadExecutor,
-                                    validationExecutor,
-                                    downloadFutures,
-                                    validationFutures,
-                                    3)
-                    )
-                    .map(r -> CompletableFuture.runAsync(r, downloadExecutor))
-                    .forEach(downloadFutures::add);
+            for (int j = 0; j < this.maxSegments; j++) {
+                final int i = j;
+                Runnable runnable = () -> downloadTask(
+                        segmentsTransposed.get(i),
+                        i,
+                        downloadSem,
+                        validationSem,
+                        downloadExecutor,
+                        validationExecutor,
+                        downloadFutures,
+                        validationFutures,
+                        3,
+                        phaser);
+                phaser.register();
+                downloadFutures.add(CompletableFuture.runAsync(runnable, downloadExecutor));
+            }
 
-            downloadFutures.forEach(CompletableFuture::join);   // TODO this here allows for race conditions -> since validationTasks will possibly try to schedule downloadTasks and so on which wont be waited upon
-            validationFutures.forEach(CompletableFuture::join); // TODO this here allows for race conditions -> since validationTasks will possibly try to schedule downloadTasks and so on which wont be waited upon
+            phaser.arriveAndAwaitAdvance();
         }
     }
 
@@ -118,15 +119,17 @@ public class AdaptiveHlsDownloader implements Downloader {
             ExecutorService validationExecutor,
             List<CompletableFuture<Void>> downloadFutures,
             List<CompletableFuture<Void>> validationFutures,
-            int validationRetries
+            int validationRetries,
+            Phaser phaser
     ) {
         try {
             downloadSem.acquire();
             this.downloadSegment(segment.getFirst(), index, segment.subList(1, segment.size()));
 
             if (this.segmentValidation != SegmentValidation.NONE) {
+                phaser.register();
                 CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
-                        () -> this.validationTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries),
+                        () -> this.validationTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries, phaser),
                         validationExecutor
                 );
                 validationFutures.add(validationFuture);
@@ -135,6 +138,7 @@ public class AdaptiveHlsDownloader implements Downloader {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         } finally {
+            phaser.arriveAndDeregister();
             downloadSem.release();
         }
     }
@@ -148,15 +152,17 @@ public class AdaptiveHlsDownloader implements Downloader {
             ExecutorService validationExecutor,
             List<CompletableFuture<Void>> downloadFutures,
             List<CompletableFuture<Void>> validationFutures,
-            int validationRetries
+            int validationRetries,
+            Phaser phaser
     ) {
         try {
             validationSem.acquire();
             boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
             if (!isValid && validationRetries > 0) {    // retry downloading and validating for validationRetries many times
                 LOGGER.warning("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
+                phaser.register();
                 CompletableFuture<Void> downloadFuture = CompletableFuture.runAsync(
-                        () -> downloadTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries - 1),
+                        () -> downloadTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries - 1, phaser),
                         downloadExecutor
                 );
                 downloadFutures.add(downloadFuture);
@@ -167,6 +173,7 @@ public class AdaptiveHlsDownloader implements Downloader {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         } finally {
+            phaser.arriveAndDeregister();
             validationSem.release();
         }
     }
