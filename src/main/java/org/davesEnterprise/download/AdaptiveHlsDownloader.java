@@ -81,54 +81,75 @@ public class AdaptiveHlsDownloader implements Downloader {
         Semaphore downloadSem = new Semaphore(this.concurrentDownloads);
         Semaphore validationSem = new Semaphore(this.concurrentValidations);
 
+        List<CompletableFuture<Void>> downloadFutures = new ArrayList<>();
         List<CompletableFuture<Void>> validationFutures = new ArrayList<>();
 
         try (ExecutorService downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
              ExecutorService validationExecutor = Executors.newVirtualThreadPerTaskExecutor()
         ) {
-            downloadExecutor.invokeAll(
-                    IntStream.range(0, this.maxSegments)
-                            .<Callable<Void>>mapToObj(i -> () -> {
-                                try {
-                                    downloadSem.acquire();
-                                    final List<MediaSegment> segment = segmentsTransposed.get(i);
-                                    this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
 
-                                    if (this.segmentValidation != SegmentValidation.NONE) {
-                                        CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
-                                                () -> {
-                                                    try {
-                                                        validationSem.acquire();
-//                                                    LOGGER.info("Validating segment " + i);
-                                                        boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation);
-                                                        this.validatedSegments.add(i);
-                                                        logProgress();
-                                                        if (!isValid) {
-                                                            LOGGER.warning("Segment " + i + " is invalid! Retrying download");
-                                                            this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
-                                                        }
-                                                    } catch (InterruptedException e) {
-                                                        Thread.currentThread().interrupt();
-                                                        throw new RuntimeException(e);
-                                                    } finally {
-                                                        validationSem.release();
-                                                    }
-                                                },
-                                                validationExecutor);
-                                        validationFutures.add(validationFuture);
-                                    }
+            IntStream.range(0, this.maxSegments)
+                    .<Runnable>mapToObj(i ->
+                            () -> downloadTask(
+                                    segmentsTransposed.get(i),
+                                    i,
+                                    downloadSem,
+                                    validationSem,
+                                    downloadExecutor,
+                                    validationExecutor,
+                                    validationFutures))
+                    .map(r -> CompletableFuture.runAsync(r, downloadExecutor))
+                    .forEach(downloadFutures::add);
 
-                                    return null;
-                                } finally {
-                                    downloadSem.release();
-                                }
-                            })
-                            .toList()
-            );
+            downloadFutures.forEach(CompletableFuture::join);
             validationFutures.forEach(CompletableFuture::join);
+        }
+    }
+
+    private void downloadTask(
+            List<MediaSegment> segment,
+            int index,
+            Semaphore downloadSem,
+            Semaphore validationSem,
+            ExecutorService downloadExecutor,
+            ExecutorService validationExecutor,
+            List<CompletableFuture<Void>> validationFutures
+    ) {
+        try {
+            downloadSem.acquire();
+            this.downloadSegment(segment.getFirst(), index, segment.subList(1, segment.size()));
+
+            if (this.segmentValidation != SegmentValidation.NONE) {
+                CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(() -> validationTask(segment, index, validationSem), validationExecutor);
+                validationFutures.add(validationFuture);
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
+        } finally {
+            downloadSem.release();
+        }
+    }
+
+    private void validationTask(
+            List<MediaSegment> segment,
+            int index,
+            Semaphore validationSem
+    ) {
+        try {
+            validationSem.acquire();
+            boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
+            this.validatedSegments.add(index);
+            logProgress();
+            if (!isValid) {
+                LOGGER.warning("Segment " + index + " is invalid! Retrying download");
+                this.downloadSegment(segment.getFirst(), index, segment.subList(1, segment.size()));
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException(e);
+        } finally {
+            validationSem.release();
         }
     }
 
