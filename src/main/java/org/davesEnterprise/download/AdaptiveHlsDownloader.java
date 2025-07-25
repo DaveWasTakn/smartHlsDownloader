@@ -14,7 +14,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -80,9 +79,6 @@ public class AdaptiveHlsDownloader implements Downloader {
         Semaphore downloadSem = new Semaphore(this.concurrentDownloads);
         Semaphore validationSem = new Semaphore(this.concurrentValidations);
 
-        List<CompletableFuture<Void>> downloadFutures = new ArrayList<>();
-        List<CompletableFuture<Void>> validationFutures = new ArrayList<>();
-
         final Phaser phaser = new Phaser(1);
 
         try (ExecutorService downloadExecutor = Executors.newVirtualThreadPerTaskExecutor();
@@ -98,12 +94,10 @@ public class AdaptiveHlsDownloader implements Downloader {
                         validationSem,
                         downloadExecutor,
                         validationExecutor,
-                        downloadFutures,
-                        validationFutures,
                         3,
                         phaser);
                 phaser.register();
-                downloadFutures.add(CompletableFuture.runAsync(runnable, downloadExecutor));
+                CompletableFuture.runAsync(runnable, downloadExecutor);
             }
 
             phaser.arriveAndAwaitAdvance();
@@ -117,8 +111,6 @@ public class AdaptiveHlsDownloader implements Downloader {
             Semaphore validationSem,
             ExecutorService downloadExecutor,
             ExecutorService validationExecutor,
-            List<CompletableFuture<Void>> downloadFutures,
-            List<CompletableFuture<Void>> validationFutures,
             int validationRetries,
             Phaser phaser
     ) {
@@ -129,10 +121,9 @@ public class AdaptiveHlsDownloader implements Downloader {
             if (this.segmentValidation != SegmentValidation.NONE) {
                 phaser.register();
                 CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
-                        () -> this.validationTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries, phaser),
+                        () -> this.validationTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, validationRetries, phaser),
                         validationExecutor
                 );
-                validationFutures.add(validationFuture);
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -150,8 +141,6 @@ public class AdaptiveHlsDownloader implements Downloader {
             Semaphore validationSem,
             ExecutorService downloadExecutor,
             ExecutorService validationExecutor,
-            List<CompletableFuture<Void>> downloadFutures,
-            List<CompletableFuture<Void>> validationFutures,
             int validationRetries,
             Phaser phaser
     ) {
@@ -162,10 +151,9 @@ public class AdaptiveHlsDownloader implements Downloader {
                 LOGGER.warning("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
                 phaser.register();
                 CompletableFuture<Void> downloadFuture = CompletableFuture.runAsync(
-                        () -> downloadTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, downloadFutures, validationFutures, validationRetries - 1, phaser),
+                        () -> downloadTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, validationRetries - 1, phaser),
                         downloadExecutor
                 );
-                downloadFutures.add(downloadFuture);
             }
             this.validatedSegments.add(index);
             logProgress();
