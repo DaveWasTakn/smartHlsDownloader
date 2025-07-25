@@ -39,6 +39,7 @@ public class AdaptiveHlsDownloader implements Downloader {
 
     private final int maxSegments;
     private final Set<Integer> downloadedSegments = ConcurrentHashMap.newKeySet();
+    private final Set<Integer> validatedSegments = ConcurrentHashMap.newKeySet();
 
     public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume) {
         this.playlists = playlists;
@@ -93,24 +94,29 @@ public class AdaptiveHlsDownloader implements Downloader {
                                     final List<MediaSegment> segment = segmentsTransposed.get(i);
                                     this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
 
-                                    CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
-                                            () -> {
-                                                try {
-                                                    validationSem.acquire();
+                                    if (this.segmentValidation != SegmentValidation.NONE) {
+                                        CompletableFuture<Void> validationFuture = CompletableFuture.runAsync(
+                                                () -> {
+                                                    try {
+                                                        validationSem.acquire();
 //                                                    LOGGER.info("Validating segment " + i);
-                                                    if (!this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation)) {
-                                                        LOGGER.warning("Segment " + i + " is invalid! Retrying download");
-                                                        this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
+                                                        boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(i, this.maxSegments)), this.segmentValidation);
+                                                        this.validatedSegments.add(i);
+                                                        logProgress();
+                                                        if (!isValid) {
+                                                            LOGGER.warning("Segment " + i + " is invalid! Retrying download");
+                                                            this.downloadSegment(segment.getFirst(), i, segment.subList(1, segment.size()));
+                                                        }
+                                                    } catch (InterruptedException e) {
+                                                        Thread.currentThread().interrupt();
+                                                        throw new RuntimeException(e);
+                                                    } finally {
+                                                        validationSem.release();
                                                     }
-                                                } catch (InterruptedException e) {
-                                                    Thread.currentThread().interrupt();
-                                                    throw new RuntimeException(e);
-                                                } finally {
-                                                    validationSem.release();
-                                                }
-                                            },
-                                            validationExecutor);
-                                    validationFutures.add(validationFuture);
+                                                },
+                                                validationExecutor);
+                                        validationFutures.add(validationFuture);
+                                    }
 
                                     return null;
                                 } finally {
@@ -124,6 +130,14 @@ public class AdaptiveHlsDownloader implements Downloader {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
         }
+    }
+
+    private void logProgress() {
+        LOGGER.info("Download > || " + formatProgress(this.downloadedSegments.size(), this.maxSegments) + " || " + formatProgress(this.validatedSegments.size(), this.maxSegments) + " || < Validation");
+    }
+
+    private String formatProgress(int current, int max) {
+        return String.format("%5.1f%%", ((float) current / max) * 100);
     }
 
     private boolean validateSegment(Path segmentPath, SegmentValidation segmentValidation) {
@@ -157,15 +171,15 @@ public class AdaptiveHlsDownloader implements Downloader {
                 NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, formatSegmentIndex(index, this.maxSegments), this.retries);
 
                 this.downloadedSegments.add(index);
-                LOGGER.info("|| " + String.format("%5.1f%%", ((float) this.downloadedSegments.size() / this.maxSegments) * 100) + " || - Downloaded segment " + (index + 1));
+                logProgress();
             } catch (OutOfRetriesException e) {
-                LOGGER.warning("Download of media segment" + (index + 1) + " failed - out of retries");
+                LOGGER.warning("Download of media segment" + index + " failed - out of retries");
                 if (!alternatives.isEmpty()) {
-                    LOGGER.info("Trying to download a lower quality media segment " + (index + 1) + " instead");
+                    LOGGER.info("Trying to download a lower quality media segment " + index + " instead");
                     List<MediaSegment> nextAlternatives = alternatives.size() > 1 ? alternatives.subList(1, alternatives.size()) : Collections.emptyList();
                     this.downloadSegment(alternatives.getFirst(), index, nextAlternatives);
                 } else {
-                    LOGGER.warning("Download of media segment " + (index + 1) + " failed - no more alternatives available to try!");
+                    LOGGER.warning("Download of media segment " + index + " failed - no more alternatives available to try!");
                     // TODO what now ... how to handle ? create empty file ? or check when creating the new playlist ?
                 }
             }

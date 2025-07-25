@@ -69,7 +69,6 @@ public class Args {
             help = true,
             description = "Display help information"
     )
-
     public boolean help = false;
 
     private Args() {
@@ -84,12 +83,25 @@ public class Args {
 
     public static void init(String[] argv) {
         INSTANCE = new Args();
-        JCommander.newBuilder()
+        JCommander jc = JCommander.newBuilder()
                 .addObject(INSTANCE)
-                .build()
-                .parse(argv);
+                .build();
+
+        try {
+            jc.parse(argv);
+        } catch (ParameterException e) {
+            System.err.println(e.getMessage());
+            jc.usage();
+            System.exit(1);
+        }
+
+        if (INSTANCE.help) {
+            jc.usage();
+            System.exit(0);
+        }
 
         if (INSTANCE.playlistUrl == null && INSTANCE.mainParameter == null) {
+            jc.usage();
             throw new ParameterException("Missing required input parameter!");
         } else if (INSTANCE.playlistUrl == null) {
             INSTANCE.playlistUrl = INSTANCE.mainParameter;
