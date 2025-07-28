@@ -56,7 +56,7 @@
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <text value="The URI to the M3U8 HLS playlist:"/>
+          <text value="The URI to the M3U8 HLS playlist: "/>
         </properties>
       </component>
       <component id="6c8c7" class="javax.swing.JTextField" binding="outputName">
