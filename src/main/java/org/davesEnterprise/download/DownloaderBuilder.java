@@ -5,6 +5,7 @@ import io.lindstrom.m3u8.model.MultivariantPlaylist;
 import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
+import org.davesEnterprise.GuiForm;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 
@@ -33,6 +34,7 @@ public class DownloaderBuilder {
     private int concurrentValidations;
     private boolean resume;
     private SegmentValidation segmentValidation;
+    private GuiForm guiForm;
 
 
     public DownloaderBuilder() {
@@ -55,7 +57,7 @@ public class DownloaderBuilder {
         }
     }
 
-    private static String getCurrentDateTime() {
+    public static String getCurrentDateTime() {
         return new SimpleDateFormat("yyyy-MM-dd_hh-mm-ss").format(new Date());
     }
 
@@ -126,6 +128,11 @@ public class DownloaderBuilder {
         return this;
     }
 
+    public DownloaderBuilder setGuiForm(GuiForm guiForm) {
+        this.guiForm = guiForm;
+        return this;
+    }
+
     public Downloader build() {
         // TODO check which Downloader to create
         return new AdaptiveHlsDownloader(this.playlists,
@@ -136,7 +143,8 @@ public class DownloaderBuilder {
                 this.concurrentValidations,
                 this.segmentValidation,
                 this.fileName,
-                this.resume
+                this.resume,
+                this.guiForm
         );
     }
 }
