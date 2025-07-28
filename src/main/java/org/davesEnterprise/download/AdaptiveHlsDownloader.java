@@ -77,7 +77,6 @@ public class AdaptiveHlsDownloader implements Downloader {
 
             this.guiForm.progressValidation.setMinimum(0);
             this.guiForm.progressValidation.setMaximum(this.maxSegments);
-            System.out.println("initgui");
         });
     }
 
@@ -185,15 +184,10 @@ public class AdaptiveHlsDownloader implements Downloader {
     }
 
     private void logProgress() {
-        System.out.println(this.guiForm);
         LOGGER.info("Download > || " + formatProgress(this.downloadedSegments.size(), this.maxSegments) + " || " + formatProgress(this.validatedSegments.size(), this.maxSegments) + " || < Validation");
         SwingUtilities.invokeLater(() -> {
             this.guiForm.progressDownload.setValue(this.downloadedSegments.size());
-            this.guiForm.progressDownload.repaint();
             this.guiForm.progressValidation.setValue(this.validatedSegments.size());
-            this.guiForm.progressValidation.repaint();
-            this.guiForm.repaint();
-            System.out.println("logProgress");
         });
     }
 
