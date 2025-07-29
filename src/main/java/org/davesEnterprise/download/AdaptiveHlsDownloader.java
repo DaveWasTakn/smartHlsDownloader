@@ -2,7 +2,7 @@ package org.davesEnterprise.download;
 
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
-import org.davesEnterprise.GuiForm;
+import org.davesEnterprise.Gui;
 import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
@@ -42,16 +42,16 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final Set<Integer> downloadedSegments = ConcurrentHashMap.newKeySet();
     private final Set<Integer> validatedSegments = ConcurrentHashMap.newKeySet();
 
-    private final GuiForm guiForm;
+    private final Gui gui;
 
-    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, GuiForm guiForm) {
+    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, Gui gui) {
         this.playlists = playlists;
         this.concurrentDownloads = concurrentDownloads;
         this.concurrentValidations = concurrentValidations;
         this.segmentValidation = segmentValidation;
         this.resume = resume;
         this.fileName = fileName;
-        this.guiForm = guiForm != null ? guiForm : new GuiForm();
+        this.gui = gui != null ? gui : new Gui();
 
         try {
             this.playlistLocation = new URI(playlistLocation);
@@ -73,11 +73,11 @@ public class AdaptiveHlsDownloader implements Downloader {
 
     private void initGui() {
         SwingUtilities.invokeLater(() -> {
-            this.guiForm.progressDownload.setMinimum(0);
-            this.guiForm.progressDownload.setMaximum(this.maxSegments);
+            this.gui.progressDownload.setMinimum(0);
+            this.gui.progressDownload.setMaximum(this.maxSegments);
 
-            this.guiForm.progressValidation.setMinimum(0);
-            this.guiForm.progressValidation.setMaximum(this.maxSegments);
+            this.gui.progressValidation.setMinimum(0);
+            this.gui.progressValidation.setMaximum(this.maxSegments);
         });
     }
 
@@ -89,15 +89,16 @@ public class AdaptiveHlsDownloader implements Downloader {
                 .gather(new TransposeGatherer<>())
                 .toList();
 
-        this.guiForm.currentState.setText(CurrentState.DOWNLOADING.toString());
+        this.gui.start.setEnabled(false);
+        this.gui.currentState.setText(CurrentState.DOWNLOADING.toString());
 
         download(segmentsTransposed);
 
-        this.guiForm.currentState.setText(CurrentState.MERGING.toString());
+        this.gui.currentState.setText(CurrentState.MERGING.toString());
 
         mergePlaylist();
 
-        this.guiForm.currentState.setText(CurrentState.FINISHED.toString());
+        this.gui.currentState.setText(CurrentState.FINISHED.toString());
     }
 
     private void download(List<List<MediaSegment>> segmentsTransposed) {
@@ -194,8 +195,8 @@ public class AdaptiveHlsDownloader implements Downloader {
     private void logProgress() {
         LOGGER.info("Download > || " + formatProgress(this.downloadedSegments.size(), this.maxSegments) + " || " + formatProgress(this.validatedSegments.size(), this.maxSegments) + " || < Validation");
         SwingUtilities.invokeLater(() -> {
-            this.guiForm.progressDownload.setValue(this.downloadedSegments.size());
-            this.guiForm.progressValidation.setValue(this.validatedSegments.size());
+            this.gui.progressDownload.setValue(this.downloadedSegments.size());
+            this.gui.progressValidation.setValue(this.validatedSegments.size());
         });
     }
 

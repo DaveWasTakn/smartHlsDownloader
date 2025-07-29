@@ -5,7 +5,7 @@ import io.lindstrom.m3u8.model.MultivariantPlaylist;
 import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
-import org.davesEnterprise.GuiForm;
+import org.davesEnterprise.Gui;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 
@@ -34,7 +34,7 @@ public class DownloaderBuilder {
     private int concurrentValidations;
     private boolean resume;
     private SegmentValidation segmentValidation;
-    private GuiForm guiForm;
+    private Gui gui;
 
 
     public DownloaderBuilder() {
@@ -128,8 +128,8 @@ public class DownloaderBuilder {
         return this;
     }
 
-    public DownloaderBuilder setGuiForm(GuiForm guiForm) {
-        this.guiForm = guiForm;
+    public DownloaderBuilder setGuiForm(Gui gui) {
+        this.gui = gui;
         return this;
     }
 
@@ -144,7 +144,7 @@ public class DownloaderBuilder {
                 this.segmentValidation,
                 this.fileName,
                 this.resume,
-                this.guiForm
+                this.gui
         );
     }
 }

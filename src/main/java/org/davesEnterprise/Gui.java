@@ -10,7 +10,7 @@ import java.awt.*;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
-public class GuiForm extends JPanel {
+public class Gui extends JPanel {
     public JPanel mainPanel;
 
     public JTextArea uri;
@@ -30,7 +30,7 @@ public class GuiForm extends JPanel {
     public JTextField workingDir;
 
 
-    public GuiForm() {
+    public Gui() {
         this.downloads.setValue(Args.get().concurrentDownloads);
         this.validations.setValue(Args.get().concurrentValidations);
         this.retries.setValue(Args.get().retries);
@@ -58,8 +58,6 @@ public class GuiForm extends JPanel {
         }
 
         String outputName = this.outputName.getText().isBlank() ? DownloaderBuilder.getCurrentDateTime() : this.outputName.getText();
-
-        this.start.setEnabled(false);
 
         CompletableFuture.runAsync(() -> {
             new DownloaderBuilder(workingDir.resolve(outputName))
