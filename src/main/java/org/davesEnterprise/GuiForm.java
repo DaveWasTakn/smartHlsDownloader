@@ -93,7 +93,7 @@ public class GuiForm extends JPanel {
         mainPanel.setLayout(new GridBagLayout());
         mainPanel.setMinimumSize(new Dimension(1006, 295));
         validations = new JSpinner();
-        validations.setToolTipText("concurrent validations");
+        validations.setToolTipText("The number of (virtual-)threads for the segment validations. I.e., how many segments are validated in parallel.");
         GridBagConstraints gbc;
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
@@ -103,8 +103,9 @@ public class GuiForm extends JPanel {
         mainPanel.add(validations, gbc);
         uri = new JTextArea();
         uri.setLineWrap(true);
+        uri.setMinimumSize(new Dimension(500, 500));
         uri.setText("");
-        uri.setToolTipText("M3U8 URI");
+        uri.setToolTipText("The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8");
         uri.setWrapStyleWord(false);
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
@@ -135,6 +136,7 @@ public class GuiForm extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label3, gbc);
         outputName = new JTextField();
+        outputName.setToolTipText("The name of the output folder and video file. Dont specify the video extension.");
         gbc = new GridBagConstraints();
         gbc.gridx = 3;
         gbc.gridy = 6;
@@ -166,7 +168,7 @@ public class GuiForm extends JPanel {
         mainPanel.add(progressValidation, gbc);
         start = new JButton();
         start.setText("Start!");
-        start.setToolTipText("start");
+        start.setToolTipText("Start the download!");
         gbc = new GridBagConstraints();
         gbc.gridx = 3;
         gbc.gridy = 15;
@@ -174,7 +176,7 @@ public class GuiForm extends JPanel {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(start, gbc);
         retries = new JSpinner();
-        retries.setToolTipText("retries per segment");
+        retries.setToolTipText("How often the download of a segment should be retried in case of network errors.");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 10;
@@ -189,7 +191,7 @@ public class GuiForm extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label5, gbc);
         downloads = new JSpinner();
-        downloads.setToolTipText("concurrent downloads");
+        downloads.setToolTipText("The number of (virtual-)threads for the segment downloads. I.e., how many segments are downloaded in parallel.");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 6;
@@ -218,7 +220,7 @@ public class GuiForm extends JPanel {
         defaultComboBoxModel1.addElement("Metadata");
         defaultComboBoxModel1.addElement("Metadata + Decode");
         validationType.setModel(defaultComboBoxModel1);
-        validationType.setToolTipText("type of segment validation");
+        validationType.setToolTipText("The type of validation run for each segment. If a segment appears to be corrupt, it will be re-downloaded.");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 4;
@@ -265,7 +267,7 @@ public class GuiForm extends JPanel {
         mainPanel.add(label9, gbc);
         workingDir = new JTextField();
         workingDir.setText("");
-        workingDir.setToolTipText("working directory");
+        workingDir.setToolTipText("The parent directory in which the output folder will be placed.");
         gbc = new GridBagConstraints();
         gbc.gridx = 3;
         gbc.gridy = 4;

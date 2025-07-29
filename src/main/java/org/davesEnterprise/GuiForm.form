@@ -15,7 +15,7 @@
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <toolTipText value="concurrent validations"/>
+          <toolTipText value="The number of (virtual-)threads for the segment validations. I.e., how many segments are validated in parallel."/>
         </properties>
       </component>
       <component id="41358" class="javax.swing.JTextArea" binding="uri">
@@ -27,8 +27,9 @@
         </constraints>
         <properties>
           <lineWrap value="true"/>
+          <minimumSize width="500" height="500"/>
           <text value=""/>
-          <toolTipText value="M3U8 URI"/>
+          <toolTipText value="The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8"/>
           <wrapStyleWord value="false"/>
         </properties>
       </component>
@@ -66,7 +67,9 @@
           </grid>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
-        <properties/>
+        <properties>
+          <toolTipText value="The name of the output folder and video file. Dont specify the video extension."/>
+        </properties>
       </component>
       <component id="c39ee" class="javax.swing.JLabel">
         <constraints>
@@ -98,7 +101,7 @@
         </constraints>
         <properties>
           <text value="Start!"/>
-          <toolTipText value="start"/>
+          <toolTipText value="Start the download!"/>
         </properties>
       </component>
       <component id="10e6b" class="javax.swing.JSpinner" binding="retries">
@@ -107,7 +110,7 @@
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <toolTipText value="retries per segment"/>
+          <toolTipText value="How often the download of a segment should be retried in case of network errors."/>
         </properties>
       </component>
       <component id="51e1f" class="javax.swing.JLabel">
@@ -125,7 +128,7 @@
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
-          <toolTipText value="concurrent downloads"/>
+          <toolTipText value="The number of (virtual-)threads for the segment downloads. I.e., how many segments are downloaded in parallel."/>
         </properties>
       </component>
       <component id="3a4b8" class="javax.swing.JLabel">
@@ -157,7 +160,7 @@
             <item value="Metadata"/>
             <item value="Metadata + Decode"/>
           </model>
-          <toolTipText value="type of segment validation"/>
+          <toolTipText value="The type of validation run for each segment. If a segment appears to be corrupt, it will be re-downloaded."/>
         </properties>
       </component>
       <component id="a1890" class="javax.swing.JLabel">
@@ -211,7 +214,7 @@
         </constraints>
         <properties>
           <text value=""/>
-          <toolTipText value="working directory"/>
+          <toolTipText value="The parent directory in which the output folder will be placed."/>
         </properties>
       </component>
       <component id="e3485" class="javax.swing.JLabel" binding="currentState">

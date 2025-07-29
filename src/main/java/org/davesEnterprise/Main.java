@@ -36,10 +36,9 @@ public class Main {
         }
 
         SwingUtilities.invokeLater(() -> {
-            JFrame frame = new JFrame("GuiForm");
-            frame.setMinimumSize(new Dimension(0, 0));
+            JFrame frame = new JFrame("M3U8 HLS Downloader");
+            frame.setMinimumSize(new Dimension(375, 350));
             GuiForm guiForm = new GuiForm();
-            guiForm.setMinimumSize(new Dimension(0, 0));
             frame.setContentPane(guiForm.mainPanel);
             frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             frame.pack();
