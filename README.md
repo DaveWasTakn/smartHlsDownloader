@@ -1,4 +1,4 @@
-# HLS Video Downloader
+# Smart HLS Video Downloader
 
 A Java-based tool for downloading HLS (HTTP Live Streaming) video content with both GUI and CLI interfaces.
 
@@ -25,12 +25,12 @@ A Java-based tool for downloading HLS (HTTP Live Streaming) video content with b
 Clone the repository and build using Maven:
 
 ```shell
-git clone git@github.com:DaveWasTakn/adaptiveHlsDownloader.git
-cd adaptiveHlsDownloader
+git clone git@github.com:DaveWasTakn/smartHlsDownloader.git
+cd smartHlsDownloader
 mvn clean package
 ```
 
-The executable JAR will be generated in the `target/` directory as `adaptiveHlsDownloader-1.0-SNAPSHOT.jar`.
+The executable JAR will be generated in the `target/` directory as `smartHlsDownloader-1.0-SNAPSHOT.jar`.
 
 ## Usage
 
@@ -39,7 +39,7 @@ The executable JAR will be generated in the `target/` directory as `adaptiveHlsD
 Launch the graphical interface by running the JAR without any parameters:
 
 ```shell
-java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar
+java -jar smartHlsDownloader-1.0-SNAPSHOT.jar
 ```
 
 ### CLI Mode
@@ -47,7 +47,7 @@ java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar
 Or the command-line interface:
 
 ```shell
-java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar [options] <HLS_PLAYLIST_URL>
+java -jar smartHlsDownloader-1.0-SNAPSHOT.jar [options] <HLS_PLAYLIST_URL>
 ```
 
 #### CLI Options
@@ -67,31 +67,24 @@ java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar [options] <HLS_PLAYLIST_URL>
 
 Download with default settings:
 
-```textmate
-java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar "https://example.com/playlist.m3u8"
+```shell
+java -jar smartHlsDownloader-1.0-SNAPSHOT.jar "https://example.com/playlist.m3u8"
 ```
 
 Download with custom output and higher concurrency:
 
-```textmate
-java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar \
+```shell
+java -jar smartHlsDownloader-1.0-SNAPSHOT.jar \
   -c 20 -cv 15 -o "myVideoName" \
   "https://example.com/playlist.m3u8"
 ```
 
 Fast download with validation disabled:
 
-```textmate
-java -jar adaptiveHlsDownloader-1.0-SNAPSHOT.jar \
+```shell
+java -jar smartHlsDownloader-1.0-SNAPSHOT.jar \
   -sv -c 25 "https://example.com/playlist.m3u8"
 ```
-
-## Technical Details
-
-- **Virtual Threads**: Uses Java 24+ virtual threads for efficient concurrent operations
-- **Validation Pipeline**: Multi-stage validation ensures segment integrity
-- **Retry Logic**: Smart retry mechanism handles network interruptions gracefully
-- **Memory Efficient**: Streaming approach keeps memory usage low during downloads
 
 ## License
 
@@ -100,5 +93,6 @@ This extension is an open source project released under the [MIT](LICENSE.txt) l
 ## TODOs
 
 Right now the main functionality works! I.e., downloading M3U8 HLS playlists.
-But there are still some TODOs, like implementing support for MPEG-DASH streams :) 
+But there are still some TODOs, like implementing support for MPEG-DASH streams, and quite some refactoring to do, so it
+is still a WIP :)
 
