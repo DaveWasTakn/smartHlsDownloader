@@ -3,6 +3,7 @@ package org.davesEnterprise.download;
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
 import org.davesEnterprise.GuiForm;
+import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 import org.davesEnterprise.network.OutOfRetriesException;
@@ -88,8 +89,15 @@ public class AdaptiveHlsDownloader implements Downloader {
                 .gather(new TransposeGatherer<>())
                 .toList();
 
+        this.guiForm.currentState.setText(CurrentState.DOWNLOADING.toString());
+
         download(segmentsTransposed);
+
+        this.guiForm.currentState.setText(CurrentState.MERGING.toString());
+
         mergePlaylist();
+
+        this.guiForm.currentState.setText(CurrentState.FINISHED.toString());
     }
 
     private void download(List<List<MediaSegment>> segmentsTransposed) {

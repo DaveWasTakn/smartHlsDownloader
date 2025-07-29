@@ -1,6 +1,7 @@
 package org.davesEnterprise;
 
 import org.davesEnterprise.download.DownloaderBuilder;
+import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.util.Args;
 
@@ -23,6 +24,7 @@ public class GuiForm extends JPanel {
 
     public JProgressBar progressDownload;
     public JProgressBar progressValidation;
+    public JLabel currentState;
 
     public JButton start;
     public JTextField workingDir;
@@ -37,6 +39,8 @@ public class GuiForm extends JPanel {
 
         this.validationType.setModel(new DefaultComboBoxModel<>(SegmentValidation.values()));
         this.validationType.setSelectedItem(SegmentValidation.DECODE);
+
+        this.currentState.setText(CurrentState.IDLE.toString());
 
         this.start.addActionListener(_ -> this.start());
     }
@@ -67,7 +71,6 @@ public class GuiForm extends JPanel {
                     .setGuiForm(this)
                     .build().start();
         }).thenRun(() -> SwingUtilities.invokeLater(() -> this.start.setEnabled(true)));
-
     }
 
 
@@ -269,6 +272,12 @@ public class GuiForm extends JPanel {
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(workingDir, gbc);
+        currentState = new JLabel();
+        currentState.setText("");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 3;
+        gbc.gridy = 10;
+        mainPanel.add(currentState, gbc);
     }
 
     /**
@@ -277,4 +286,5 @@ public class GuiForm extends JPanel {
     public JComponent $$$getRootComponent$$$() {
         return mainPanel;
     }
+
 }
