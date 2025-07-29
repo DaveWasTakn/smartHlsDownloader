@@ -7,6 +7,7 @@ import org.davesEnterprise.util.Args;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 
@@ -26,8 +27,14 @@ public class Gui extends JPanel {
     public JProgressBar progressValidation;
     public JLabel currentState;
 
+    private JButton logButton;
+    private boolean showLog = false;
+    public JTextArea logs;
+    private JScrollPane logs_scrollPane;
+
     public JButton start;
     public JTextField workingDir;
+    private JScrollPane uri_scrollPane;
 
 
     public Gui() {
@@ -41,15 +48,25 @@ public class Gui extends JPanel {
         this.validationType.setSelectedItem(SegmentValidation.DECODE);
 
         this.currentState.setText(CurrentState.IDLE.toString());
+//        this.logs.setVisible(this.showLog);
+        this.logs_scrollPane.setVisible(this.showLog);
 
-        this.start.addActionListener(_ -> this.start());
+        this.start.addActionListener(this::start);
+        this.logButton.addActionListener(this::logButtonPressed);
+    }
+
+    private void logButtonPressed(ActionEvent actionEvent) {
+        this.showLog = !this.showLog;
+//        this.logs.setVisible(this.showLog);
+        this.logs_scrollPane.setVisible(this.showLog);
+        this.logButton.setText(this.showLog ? "Hide Log" : "Show Log");
     }
 
     private static Path defaultWorkingDir() {
         return Path.of(System.getProperty("user.home"), "Downloads");
     }
 
-    private void start() {
+    private void start(ActionEvent actionEvent) {
         Path workingDir;
         if (!this.workingDir.getText().isBlank()) {
             workingDir = Path.of(this.workingDir.getText());
@@ -60,8 +77,7 @@ public class Gui extends JPanel {
         String outputName = this.outputName.getText().isBlank() ? DownloaderBuilder.getCurrentDateTime() : this.outputName.getText();
 
         CompletableFuture.runAsync(() ->
-                new DownloaderBuilder(workingDir.resolve(outputName))
-                        .setGui(this)
+                new DownloaderBuilder(workingDir.resolve(outputName), this)
                         .setPlaylist(this.uri.getText())
                         .setSegmentValidation((SegmentValidation) this.validationType.getSelectedItem())
                         .setConcurrentDownloads((Integer) this.downloads.getValue())
@@ -96,27 +112,16 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 8;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(validations, gbc);
-        uri = new JTextArea();
-        uri.setLineWrap(true);
-        uri.setMinimumSize(new Dimension(500, 500));
-        uri.setText("");
-        uri.setToolTipText("The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8");
-        uri.setWrapStyleWord(false);
-        gbc = new GridBagConstraints();
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        gbc.gridwidth = 3;
-        gbc.weighty = 1.0;
-        gbc.fill = GridBagConstraints.BOTH;
-        mainPanel.add(uri, gbc);
         final JLabel label1 = new JLabel();
         label1.setText("Concurrent Validations:");
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 7;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label1, gbc);
         final JLabel label2 = new JLabel();
@@ -124,6 +129,7 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 9;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label2, gbc);
         final JLabel label3 = new JLabel();
@@ -131,12 +137,13 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 1;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label3, gbc);
         outputName = new JTextField();
         outputName.setToolTipText("The name of the output folder and video file. Dont specify the video extension.");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 6;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
@@ -145,21 +152,21 @@ public class Gui extends JPanel {
         final JLabel label4 = new JLabel();
         label4.setText("Output Name:");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 5;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label4, gbc);
         progressDownload = new JProgressBar();
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 12;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(progressDownload, gbc);
         progressValidation = new JProgressBar();
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 14;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -168,7 +175,7 @@ public class Gui extends JPanel {
         start.setText("Start!");
         start.setToolTipText("Start the download!");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 15;
         gbc.weightx = 1.0;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -178,6 +185,7 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 10;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(retries, gbc);
@@ -186,6 +194,7 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 5;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label5, gbc);
         downloads = new JSpinner();
@@ -193,13 +202,14 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 6;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(downloads, gbc);
         final JLabel label6 = new JLabel();
         label6.setText("Download:");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 11;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
@@ -207,7 +217,7 @@ public class Gui extends JPanel {
         final JLabel label7 = new JLabel();
         label7.setText("Validation:");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 13;
         gbc.weightx = 1.0;
         gbc.anchor = GridBagConstraints.WEST;
@@ -222,6 +232,7 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 4;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(validationType, gbc);
@@ -230,23 +241,24 @@ public class Gui extends JPanel {
         gbc = new GridBagConstraints();
         gbc.gridx = 1;
         gbc.gridy = 3;
+        gbc.gridwidth = 2;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label8, gbc);
         final JPanel spacer1 = new JPanel();
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 16;
         gbc.fill = GridBagConstraints.VERTICAL;
         mainPanel.add(spacer1, gbc);
         final JPanel spacer2 = new JPanel();
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 0;
         gbc.fill = GridBagConstraints.VERTICAL;
         mainPanel.add(spacer2, gbc);
         final JPanel spacer3 = new JPanel();
         gbc = new GridBagConstraints();
-        gbc.gridx = 4;
+        gbc.gridx = 5;
         gbc.gridy = 2;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         mainPanel.add(spacer3, gbc);
@@ -259,7 +271,7 @@ public class Gui extends JPanel {
         final JLabel label9 = new JLabel();
         label9.setText("Working Dir:");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 3;
         gbc.anchor = GridBagConstraints.WEST;
         mainPanel.add(label9, gbc);
@@ -267,7 +279,7 @@ public class Gui extends JPanel {
         workingDir.setText("");
         workingDir.setToolTipText("The parent directory in which the output folder will be placed.");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 4;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -275,9 +287,62 @@ public class Gui extends JPanel {
         currentState = new JLabel();
         currentState.setText("");
         gbc = new GridBagConstraints();
-        gbc.gridx = 3;
+        gbc.gridx = 4;
         gbc.gridy = 10;
         mainPanel.add(currentState, gbc);
+        final JPanel spacer5 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 15;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        mainPanel.add(spacer5, gbc);
+        logButton = new JButton();
+        logButton.setText("Show Log");
+        logButton.setToolTipText("Whether to show the application log");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 15;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        mainPanel.add(logButton, gbc);
+        final JPanel spacer6 = new JPanel();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 2;
+        gbc.gridy = 18;
+        gbc.fill = GridBagConstraints.VERTICAL;
+        mainPanel.add(spacer6, gbc);
+        logs_scrollPane = new JScrollPane();
+        logs_scrollPane.setAutoscrolls(true);
+        logs_scrollPane.setMinimumSize(new Dimension(200, 100));
+        logs_scrollPane.setOpaque(true);
+        logs_scrollPane.setPreferredSize(new Dimension(200, 100));
+        logs_scrollPane.setVerticalScrollBarPolicy(22);
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 17;
+        gbc.gridwidth = 4;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        mainPanel.add(logs_scrollPane, gbc);
+        logs = new JTextArea();
+        logs.setEditable(false);
+        logs.setEnabled(true);
+        logs.setText("");
+        logs_scrollPane.setViewportView(logs);
+        uri_scrollPane = new JScrollPane();
+        gbc = new GridBagConstraints();
+        gbc.gridx = 1;
+        gbc.gridy = 2;
+        gbc.gridwidth = 4;
+        gbc.weighty = 1.0;
+        gbc.fill = GridBagConstraints.BOTH;
+        mainPanel.add(uri_scrollPane, gbc);
+        uri = new JTextArea();
+        uri.setLineWrap(true);
+        uri.setMaximumSize(new Dimension(2147483647, 200));
+        uri.setText("");
+        uri.setToolTipText("The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8");
+        uri.setWrapStyleWord(false);
+        uri_scrollPane.setViewportView(uri);
     }
 
     /**

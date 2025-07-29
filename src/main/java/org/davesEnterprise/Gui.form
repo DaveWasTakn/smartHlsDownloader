@@ -11,31 +11,16 @@
     <children>
       <component id="fe803" class="javax.swing.JSpinner" binding="validations">
         <constraints>
-          <grid row="8" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="8" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
           <toolTipText value="The number of (virtual-)threads for the segment validations. I.e., how many segments are validated in parallel."/>
         </properties>
       </component>
-      <component id="41358" class="javax.swing.JTextArea" binding="uri">
-        <constraints>
-          <grid row="2" column="1" row-span="1" col-span="3" vsize-policy="6" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false">
-            <preferred-size width="150" height="50"/>
-          </grid>
-          <gridbag weightx="0.0" weighty="1.0"/>
-        </constraints>
-        <properties>
-          <lineWrap value="true"/>
-          <minimumSize width="500" height="500"/>
-          <text value=""/>
-          <toolTipText value="The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8"/>
-          <wrapStyleWord value="false"/>
-        </properties>
-      </component>
       <component id="f3b0e" class="javax.swing.JLabel">
         <constraints>
-          <grid row="7" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="7" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -44,7 +29,7 @@
       </component>
       <component id="47ccc" class="javax.swing.JLabel">
         <constraints>
-          <grid row="9" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="9" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -53,7 +38,7 @@
       </component>
       <component id="53885" class="javax.swing.JLabel">
         <constraints>
-          <grid row="1" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="1" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -62,7 +47,7 @@
       </component>
       <component id="6c8c7" class="javax.swing.JTextField" binding="outputName">
         <constraints>
-          <grid row="6" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="8" fill="1" indent="0" use-parent-layout="false">
+          <grid row="6" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
           </grid>
           <gridbag weightx="1.0" weighty="0.0"/>
@@ -73,7 +58,7 @@
       </component>
       <component id="c39ee" class="javax.swing.JLabel">
         <constraints>
-          <grid row="5" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -82,21 +67,21 @@
       </component>
       <component id="dc204" class="javax.swing.JProgressBar" binding="progressDownload">
         <constraints>
-          <grid row="12" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="12" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties/>
       </component>
       <component id="8fd12" class="javax.swing.JProgressBar" binding="progressValidation">
         <constraints>
-          <grid row="14" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="14" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="7" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties/>
       </component>
       <component id="6f1b2" class="javax.swing.JButton" binding="start">
         <constraints>
-          <grid row="15" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="15" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -106,7 +91,7 @@
       </component>
       <component id="10e6b" class="javax.swing.JSpinner" binding="retries">
         <constraints>
-          <grid row="10" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="10" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -115,7 +100,7 @@
       </component>
       <component id="51e1f" class="javax.swing.JLabel">
         <constraints>
-          <grid row="5" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="5" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -124,7 +109,7 @@
       </component>
       <component id="aa078" class="javax.swing.JSpinner" binding="downloads">
         <constraints>
-          <grid row="6" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="6" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -133,7 +118,7 @@
       </component>
       <component id="3a4b8" class="javax.swing.JLabel">
         <constraints>
-          <grid row="11" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="11" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -142,7 +127,7 @@
       </component>
       <component id="39e95" class="javax.swing.JLabel">
         <constraints>
-          <grid row="13" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="13" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="1.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -151,7 +136,7 @@
       </component>
       <component id="81d97" class="javax.swing.JComboBox" binding="validationType">
         <constraints>
-          <grid row="4" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="4" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -165,7 +150,7 @@
       </component>
       <component id="a1890" class="javax.swing.JLabel">
         <constraints>
-          <grid row="3" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="1" row-span="1" col-span="2" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -174,19 +159,19 @@
       </component>
       <vspacer id="bed6f">
         <constraints>
-          <grid row="16" column="3" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <grid row="16" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
       </vspacer>
       <vspacer id="f0bb">
         <constraints>
-          <grid row="0" column="3" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <grid row="0" column="4" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
       </vspacer>
       <hspacer id="b00a3">
         <constraints>
-          <grid row="2" column="4" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <grid row="2" column="5" row-span="1" col-span="1" vsize-policy="1" hsize-policy="6" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
       </hspacer>
@@ -198,7 +183,7 @@
       </hspacer>
       <component id="18650" class="javax.swing.JLabel">
         <constraints>
-          <grid row="3" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="3" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
@@ -207,7 +192,7 @@
       </component>
       <component id="5c342" class="javax.swing.JTextField" binding="workingDir">
         <constraints>
-          <grid row="4" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
+          <grid row="4" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="6" anchor="8" fill="1" indent="0" use-parent-layout="false">
             <preferred-size width="150" height="-1"/>
           </grid>
           <gridbag weightx="0.0" weighty="0.0"/>
@@ -219,13 +204,79 @@
       </component>
       <component id="e3485" class="javax.swing.JLabel" binding="currentState">
         <constraints>
-          <grid row="10" column="3" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
+          <grid row="10" column="4" row-span="1" col-span="1" vsize-policy="0" hsize-policy="0" anchor="0" fill="0" indent="0" use-parent-layout="false"/>
           <gridbag weightx="0.0" weighty="0.0"/>
         </constraints>
         <properties>
           <text value=""/>
         </properties>
       </component>
+      <vspacer id="555de">
+        <constraints>
+          <grid row="15" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
+      <component id="605e8" class="javax.swing.JButton" binding="logButton">
+        <constraints>
+          <grid row="15" column="1" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="0" fill="1" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+        <properties>
+          <text value="Show Log"/>
+          <toolTipText value="Whether to show the application log"/>
+        </properties>
+      </component>
+      <vspacer id="8e97a">
+        <constraints>
+          <grid row="18" column="2" row-span="1" col-span="1" vsize-policy="6" hsize-policy="1" anchor="0" fill="2" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="0.0"/>
+        </constraints>
+      </vspacer>
+      <scrollpane id="6558a" binding="logs_scrollPane">
+        <constraints>
+          <grid row="17" column="1" row-span="1" col-span="4" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="1.0"/>
+        </constraints>
+        <properties>
+          <autoscrolls value="true"/>
+          <minimumSize width="200" height="100"/>
+          <opaque value="true"/>
+          <preferredSize width="200" height="100"/>
+          <verticalScrollBarPolicy value="22"/>
+        </properties>
+        <border type="none"/>
+        <children>
+          <component id="f3d22" class="javax.swing.JTextArea" binding="logs">
+            <constraints/>
+            <properties>
+              <editable value="false"/>
+              <enabled value="true"/>
+              <text value=""/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
+      <scrollpane id="2d443" binding="uri_scrollPane">
+        <constraints>
+          <grid row="2" column="1" row-span="1" col-span="4" vsize-policy="7" hsize-policy="7" anchor="0" fill="3" indent="0" use-parent-layout="false"/>
+          <gridbag weightx="0.0" weighty="1.0"/>
+        </constraints>
+        <properties/>
+        <border type="none"/>
+        <children>
+          <component id="41358" class="javax.swing.JTextArea" binding="uri">
+            <constraints/>
+            <properties>
+              <lineWrap value="true"/>
+              <maximumSize width="2147483647" height="200"/>
+              <text value=""/>
+              <toolTipText value="The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8"/>
+              <wrapStyleWord value="false"/>
+            </properties>
+          </component>
+        </children>
+      </scrollpane>
     </children>
   </grid>
 </form>

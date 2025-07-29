@@ -9,6 +9,7 @@ import org.davesEnterprise.Gui;
 import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
+import org.davesEnterprise.util.GuiLogger;
 
 import java.io.IOException;
 import java.net.URI;
@@ -19,15 +20,15 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Logger;
 
 public class DownloaderBuilder {
 
-    private final static Logger LOGGER = Logger.getLogger(DownloaderBuilder.class.getSimpleName());
+    private final GuiLogger LOGGER;
 
     private final Path outputDir;
     private final String fileName;
     private final Path playlistsOutputDir;
+    private final NetworkUtil networkUtil;
     private int retries = 10;
     private List<MediaPlaylist> playlists = new ArrayList<>();
     private String playlistLocation;
@@ -38,15 +39,23 @@ public class DownloaderBuilder {
     private Gui gui;
 
 
-    public DownloaderBuilder() {
-        this(getCurrentDateTime());
+    public DownloaderBuilder(String output) {
+        this(output, new Gui()); // dummy GUI
     }
 
-    public DownloaderBuilder(String output) {
-        this(output != null ? Path.of(output) : Path.of(getCurrentDateTime()));
+    public DownloaderBuilder(String output, Gui gui) {
+        this(output != null ? Path.of(output) : Path.of(getCurrentDateTime()), gui);
     }
 
     public DownloaderBuilder(Path outputDir) {
+        this(outputDir, new Gui()); // dummy GUI
+    }
+
+    public DownloaderBuilder(Path outputDir, Gui gui) {
+        this.gui = gui;
+        this.LOGGER = new GuiLogger(DownloaderBuilder.class, gui);
+        this.networkUtil = new NetworkUtil(gui);
+
         this.fileName = outputDir.getFileName().toString();
         this.outputDir = outputDir.toAbsolutePath();
         this.playlistsOutputDir = outputDir.resolve("playlists");
@@ -84,10 +93,10 @@ public class DownloaderBuilder {
                     })
                     .toList();
         } catch (IOException e) {
-            LOGGER.warning("Supplied playlist does not seem to be a MultiVariantPlaylist!");
+            this.LOGGER.warn("Supplied playlist does not seem to be a MultiVariantPlaylist!");
             final Path playlistPath = obtainPlaylist(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
             this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
-            LOGGER.warning("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
+            this.LOGGER.warn("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
         } finally {
             if (this.gui != null) {
                 this.gui.currentState.setText(CurrentState.IDLE.toString());
@@ -102,7 +111,7 @@ public class DownloaderBuilder {
     }
 
     private Path obtainPlaylist(String playlistLocation, String fileName) {
-        return NetworkUtil.obtainFile(playlistLocation, this.playlistsOutputDir, fileName, this.retries);
+        return this.networkUtil.obtainFile(playlistLocation, this.playlistsOutputDir, fileName, this.retries);
     }
 
     private static MediaPlaylist parseMediaPlaylist(Path playlistPath) {
