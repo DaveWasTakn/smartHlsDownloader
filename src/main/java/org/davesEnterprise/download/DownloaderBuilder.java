@@ -64,6 +64,7 @@ public class DownloaderBuilder {
 
     public DownloaderBuilder setPlaylist(String playlistLocation) throws RuntimeException {
         // TODO maybe put actual parsing into downloader
+        // TODO fix multivariant support ?!
         this.playlistLocation = playlistLocation;
         if (this.gui != null) {
             this.gui.currentState.setText(CurrentState.PARSING_PLAYLIST.toString());
