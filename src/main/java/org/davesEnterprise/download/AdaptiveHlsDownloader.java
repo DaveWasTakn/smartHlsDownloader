@@ -51,7 +51,6 @@ public class AdaptiveHlsDownloader implements Downloader {
         this.resume = resume;
         this.fileName = fileName;
         this.guiForm = guiForm != null ? guiForm : new GuiForm();
-        this.initGui();
 
         try {
             this.playlistLocation = new URI(playlistLocation);
@@ -68,6 +67,7 @@ public class AdaptiveHlsDownloader implements Downloader {
         }
         this.retries = retries;
         this.maxSegments = this.playlists.getFirst().mediaSegments().size();
+        this.initGui();
     }
 
     private void initGui() {

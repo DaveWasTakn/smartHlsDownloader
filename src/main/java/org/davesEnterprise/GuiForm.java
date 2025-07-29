@@ -7,6 +7,7 @@ import org.davesEnterprise.util.Args;
 import javax.swing.*;
 import java.awt.*;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
 
 public class GuiForm extends JPanel {
     public JPanel mainPanel;
@@ -28,8 +29,6 @@ public class GuiForm extends JPanel {
 
 
     public GuiForm() {
-        $$$setupUI$$$();
-
         this.downloads.setValue(Args.get().concurrentDownloads);
         this.validations.setValue(Args.get().concurrentValidations);
         this.retries.setValue(Args.get().retries);
@@ -54,19 +53,21 @@ public class GuiForm extends JPanel {
             workingDir = defaultWorkingDir();
         }
 
-        String outputName = this.outputName.getText();
-        if (outputName.isBlank()) {
-            outputName = DownloaderBuilder.getCurrentDateTime();
-        }
+        String outputName = this.outputName.getText().isBlank() ? DownloaderBuilder.getCurrentDateTime() : this.outputName.getText();
 
-        new DownloaderBuilder(workingDir.resolve(outputName))
-                .setPlaylist(this.uri.getText())
-                .setSegmentValidation((SegmentValidation) this.validationType.getSelectedItem())
-                .setConcurrentDownloads((Integer) this.downloads.getValue())
-                .setConcurrentValidations((Integer) this.validations.getValue())
-                .setRetries((Integer) this.retries.getValue())
-                .setGuiForm(this)
-                .build().start();
+        this.start.setEnabled(false);
+
+        CompletableFuture.runAsync(() -> {
+            new DownloaderBuilder(workingDir.resolve(outputName))
+                    .setPlaylist(this.uri.getText())
+                    .setSegmentValidation((SegmentValidation) this.validationType.getSelectedItem())
+                    .setConcurrentDownloads((Integer) this.downloads.getValue())
+                    .setConcurrentValidations((Integer) this.validations.getValue())
+                    .setRetries((Integer) this.retries.getValue())
+                    .setGuiForm(this)
+                    .build().start();
+        }).thenRun(() -> SwingUtilities.invokeLater(() -> this.start.setEnabled(true)));
+
     }
 
 
