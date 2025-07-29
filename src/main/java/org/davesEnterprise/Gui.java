@@ -27,14 +27,14 @@ public class Gui extends JPanel {
     public JProgressBar progressValidation;
     public JLabel currentState;
 
-    private JButton logButton;
-    private boolean showLog = false;
+    public JButton logButton;
+    public boolean showLog = false;
     public JTextArea logs;
-    private JScrollPane logs_scrollPane;
+    public JScrollPane logs_scrollPane;
 
     public JButton start;
     public JTextField workingDir;
-    private JScrollPane uri_scrollPane;
+    public JScrollPane uri_scrollPane;
 
 
     public Gui() {
@@ -48,7 +48,6 @@ public class Gui extends JPanel {
         this.validationType.setSelectedItem(SegmentValidation.DECODE);
 
         this.currentState.setText(CurrentState.IDLE.toString());
-//        this.logs.setVisible(this.showLog);
         this.logs_scrollPane.setVisible(this.showLog);
 
         this.start.addActionListener(this::start);
@@ -57,7 +56,6 @@ public class Gui extends JPanel {
 
     private void logButtonPressed(ActionEvent actionEvent) {
         this.showLog = !this.showLog;
-//        this.logs.setVisible(this.showLog);
         this.logs_scrollPane.setVisible(this.showLog);
         this.logButton.setText(this.showLog ? "Hide Log" : "Show Log");
     }

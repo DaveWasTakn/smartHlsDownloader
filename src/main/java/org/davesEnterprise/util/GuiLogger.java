@@ -2,6 +2,7 @@ package org.davesEnterprise.util;
 
 import org.davesEnterprise.Gui;
 
+import javax.swing.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -34,6 +35,8 @@ public class GuiLogger {
         logger.log(level, message);
         if (gui != null) {
             gui.logs.append((gui.logs.getText().isBlank() ? "" : "\n") + message);
+            JScrollBar vertical = gui.logs_scrollPane.getVerticalScrollBar();
+            vertical.setValue(vertical.getMaximum());
         }
     }
 
