@@ -11,6 +11,7 @@ import java.awt.*;
 public class Main {
     public static void main(String[] args) {
         // TODO adaptiveness ? ie lower quality segments
+        // TODO MPEG-DASH support ? https://mvnrepository.com/artifact/io.lindstrom/mpd-parser ?
 
         if (args.length > 0) {
             Args.init(args);

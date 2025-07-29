@@ -6,6 +6,7 @@ import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
 import org.davesEnterprise.Gui;
+import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
 import org.davesEnterprise.network.NetworkUtil;
 
@@ -62,7 +63,11 @@ public class DownloaderBuilder {
     }
 
     public DownloaderBuilder setPlaylist(String playlistLocation) throws RuntimeException {
+        // TODO maybe put actual parsing into downloader
         this.playlistLocation = playlistLocation;
+        if (this.gui != null) {
+            this.gui.currentState.setText(CurrentState.PARSING_PLAYLIST.toString());
+        }
         try {
             final Path playlistPath = obtainPlaylist(playlistLocation, "multiVariantPlaylist.txt");
             final MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
@@ -82,6 +87,10 @@ public class DownloaderBuilder {
             final Path playlistPath = obtainPlaylist(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
             this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
             LOGGER.warning("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
+        } finally {
+            if (this.gui != null) {
+                this.gui.currentState.setText(CurrentState.IDLE.toString());
+            }
         }
         return this;
     }
@@ -128,7 +137,7 @@ public class DownloaderBuilder {
         return this;
     }
 
-    public DownloaderBuilder setGuiForm(Gui gui) {
+    public DownloaderBuilder setGui(Gui gui) {
         this.gui = gui;
         return this;
     }

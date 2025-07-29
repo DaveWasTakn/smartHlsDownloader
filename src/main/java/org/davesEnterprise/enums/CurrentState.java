@@ -2,6 +2,7 @@ package org.davesEnterprise.enums;
 
 public enum CurrentState {
     IDLE("Idle"),
+    PARSING_PLAYLIST("Parsing Playlist..."),
     DOWNLOADING("Downloading..."),
     MERGING("Merging..."),
     FINISHED("Finished!");

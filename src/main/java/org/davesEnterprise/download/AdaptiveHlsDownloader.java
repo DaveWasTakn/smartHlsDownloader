@@ -175,6 +175,7 @@ public class AdaptiveHlsDownloader implements Downloader {
             boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
             if (!isValid && validationRetries > 0) {    // retry downloading and validating for validationRetries many times
                 LOGGER.warning("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
+                this.downloadedSegments.remove(index);
                 phaser.register();
                 CompletableFuture<Void> downloadFuture = CompletableFuture.runAsync(
                         () -> downloadTask(segment, index, downloadSem, validationSem, downloadExecutor, validationExecutor, validationRetries - 1, phaser),

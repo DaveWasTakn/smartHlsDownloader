@@ -59,16 +59,16 @@ public class Gui extends JPanel {
 
         String outputName = this.outputName.getText().isBlank() ? DownloaderBuilder.getCurrentDateTime() : this.outputName.getText();
 
-        CompletableFuture.runAsync(() -> {
-            new DownloaderBuilder(workingDir.resolve(outputName))
-                    .setPlaylist(this.uri.getText())
-                    .setSegmentValidation((SegmentValidation) this.validationType.getSelectedItem())
-                    .setConcurrentDownloads((Integer) this.downloads.getValue())
-                    .setConcurrentValidations((Integer) this.validations.getValue())
-                    .setRetries((Integer) this.retries.getValue())
-                    .setGuiForm(this)
-                    .build().start();
-        }).thenRun(() -> SwingUtilities.invokeLater(() -> this.start.setEnabled(true)));
+        CompletableFuture.runAsync(() ->
+                new DownloaderBuilder(workingDir.resolve(outputName))
+                        .setGui(this)
+                        .setPlaylist(this.uri.getText())
+                        .setSegmentValidation((SegmentValidation) this.validationType.getSelectedItem())
+                        .setConcurrentDownloads((Integer) this.downloads.getValue())
+                        .setConcurrentValidations((Integer) this.validations.getValue())
+                        .setRetries((Integer) this.retries.getValue())
+                        .build().start()
+        ).thenRun(() -> SwingUtilities.invokeLater(() -> this.start.setEnabled(true)));
     }
 
 
