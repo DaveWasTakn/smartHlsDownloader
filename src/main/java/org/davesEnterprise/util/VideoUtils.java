@@ -3,7 +3,6 @@ package org.davesEnterprise.util;
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
-import org.davesEnterprise.Gui;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -18,11 +17,7 @@ import java.util.stream.Stream;
 
 public class VideoUtils {
 
-    private final GuiLogger LOGGER;
-
-    public VideoUtils(Gui gui) {
-        this.LOGGER = new GuiLogger(VideoUtils.class, gui);
-    }
+    private static final GuiLogger LOGGER = GuiLogger.get();
 
     public static Path adjustPlaylist(MediaPlaylist playlist, Path outputDir) {
         List<MediaSegment> segments = playlist.mediaSegments();
@@ -76,7 +71,7 @@ public class VideoUtils {
     }
 
 
-    public void mergePlaylist(Path newPlaylistPath, Path workingDir, Path videoFilePath) {
+    public static void mergePlaylist(Path newPlaylistPath, Path workingDir, Path videoFilePath) {
         // TODO handle missing segments!!!!!!!!!!
         try {
             String[] cmd = {

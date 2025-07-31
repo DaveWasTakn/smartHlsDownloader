@@ -22,13 +22,11 @@ import java.util.Date;
 import java.util.List;
 
 public class DownloaderBuilder {
-
-    private final GuiLogger LOGGER;
+    private static final GuiLogger LOGGER = GuiLogger.get();
 
     private final Path outputDir;
     private final String fileName;
     private final Path playlistsOutputDir;
-    private final NetworkUtil networkUtil;
     private int retries = 10;
     private List<MediaPlaylist> playlists = new ArrayList<>();
     private String playlistLocation;
@@ -53,8 +51,6 @@ public class DownloaderBuilder {
 
     public DownloaderBuilder(Path outputDir, Gui gui) {
         this.gui = gui;
-        this.LOGGER = new GuiLogger(DownloaderBuilder.class, gui);
-        this.networkUtil = new NetworkUtil(gui);
 
         this.fileName = outputDir.getFileName().toString();
         this.outputDir = outputDir.toAbsolutePath();
@@ -93,10 +89,10 @@ public class DownloaderBuilder {
                     })
                     .toList();
         } catch (IOException e) {
-            this.LOGGER.warn("Supplied playlist does not seem to be a MultiVariantPlaylist!");
+            LOGGER.warn("Supplied playlist does not seem to be a MultiVariantPlaylist!");
             final Path playlistPath = obtainPlaylist(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
             this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
-            this.LOGGER.warn("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
+            LOGGER.warn("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
         } finally {
             if (this.gui != null) {
                 this.gui.currentState.setText(CurrentState.IDLE.toString());
@@ -111,7 +107,7 @@ public class DownloaderBuilder {
     }
 
     private Path obtainPlaylist(String playlistLocation, String fileName) {
-        return this.networkUtil.obtainFile(playlistLocation, this.playlistsOutputDir, fileName, this.retries);
+        return NetworkUtil.obtainFile(playlistLocation, this.playlistsOutputDir, fileName, this.retries);
     }
 
     private static MediaPlaylist parseMediaPlaylist(Path playlistPath) {

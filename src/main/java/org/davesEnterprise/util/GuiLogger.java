@@ -7,16 +7,23 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class GuiLogger {
+    private static GuiLogger INSTANCE;
     private final Logger logger;
-    private Gui gui;
+    private final Gui gui;
 
-    public GuiLogger(Class<?> clazz, Gui gui) {
-        this.logger = Logger.getLogger(clazz.getSimpleName());
+    public static void init(Gui gui) {
+        if (INSTANCE == null) {
+            INSTANCE = new GuiLogger(gui);
+        }
+    }
+
+    private GuiLogger(Gui gui) {
+        this.logger = Logger.getAnonymousLogger();
         this.gui = gui;
     }
 
-    public void setGui(Gui gui) {
-        this.gui = gui;
+    public static GuiLogger get() {
+        return INSTANCE;
     }
 
     public void info(String message) {
@@ -38,9 +45,5 @@ public class GuiLogger {
             JScrollBar vertical = gui.logs_scrollPane.getVerticalScrollBar();
             vertical.setValue(vertical.getMaximum());
         }
-    }
-
-    public Logger getLogger() {
-        return logger;
     }
 }

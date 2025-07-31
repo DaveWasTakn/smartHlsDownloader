@@ -1,7 +1,6 @@
 package org.davesEnterprise.network;
 
 import org.apache.commons.io.FileUtils;
-import org.davesEnterprise.Gui;
 import org.davesEnterprise.util.GuiLogger;
 
 import java.io.IOException;
@@ -15,17 +14,13 @@ import java.nio.file.StandardCopyOption;
 
 public class NetworkUtil {
 
-    private final GuiLogger LOGGER;
+    private final static GuiLogger LOGGER = GuiLogger.get();
 
-    public NetworkUtil(Gui gui) {
-        this.LOGGER = new GuiLogger(NetworkUtil.class, gui);
-    }
-
-    public Path obtainFile(String location, Path outputDir, String fileName, int retries) {
+    public static Path obtainFile(String location, Path outputDir, String fileName, int retries) {
         Path filePath;
         if (isURL(location)) {
             try {
-                filePath = this.downloadResource(new URI(location).toURL(), outputDir, fileName, retries);
+                filePath = NetworkUtil.downloadResource(new URI(location).toURL(), outputDir, fileName, retries);
             } catch (URISyntaxException | MalformedURLException e) {
                 throw new RuntimeException(e); // TODO how to allow for fkd up urls ? be more lenient !!!!!
             }
@@ -46,7 +41,7 @@ public class NetworkUtil {
         return loc.startsWith("http:") || loc.startsWith("https:");
     }
 
-    public Path downloadResource(URL url, Path outputDir, String fileName, int retries) throws OutOfRetriesException {
+    public static Path downloadResource(URL url, Path outputDir, String fileName, int retries) throws OutOfRetriesException {
         if (retries < 1) {
             throw new OutOfRetriesException("Retries exceeded for resource " + url);
         }
@@ -54,7 +49,7 @@ public class NetworkUtil {
         try {
             return download(url, outputDir, fileName);
         } catch (IOException e) {
-            this.LOGGER.warn("Failed attempt to download " + url + " (" + retries + " retries left) : " + e.getMessage());
+            LOGGER.warn("Failed attempt to download " + url + " (" + retries + " retries left) : " + e.getMessage());
             return downloadResource(url, outputDir, fileName, retries - 1);
         }
     }

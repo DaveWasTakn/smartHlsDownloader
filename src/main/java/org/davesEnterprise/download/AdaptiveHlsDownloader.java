@@ -24,7 +24,7 @@ import java.util.Set;
 import java.util.concurrent.*;
 
 public class AdaptiveHlsDownloader implements Downloader {
-    private final GuiLogger LOGGER;
+    private static final GuiLogger LOGGER = GuiLogger.get();
 
     private final List<MediaPlaylist> playlists;
     private final int concurrentDownloads;
@@ -43,7 +43,6 @@ public class AdaptiveHlsDownloader implements Downloader {
     private final Set<Integer> validatedSegments = ConcurrentHashMap.newKeySet();
 
     private final Gui gui;
-    private final NetworkUtil networkUtil;
 
     public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, Gui gui) {
         this.playlists = playlists;
@@ -54,8 +53,6 @@ public class AdaptiveHlsDownloader implements Downloader {
         this.fileName = fileName;
 
         this.gui = gui != null ? gui : new Gui();
-        this.LOGGER = new GuiLogger(AdaptiveHlsDownloader.class, this.gui);
-        this.networkUtil = new NetworkUtil(gui);
         this.maxSegments = this.playlists.getFirst().mediaSegments().size();
         this.initGui();
 
@@ -178,7 +175,7 @@ public class AdaptiveHlsDownloader implements Downloader {
             validationSem.acquire();
             boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
             if (!isValid && validationRetries > 0) {    // retry downloading and validating for validationRetries many times
-                this.LOGGER.warn("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
+                LOGGER.warn("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
                 this.downloadedSegments.remove(index);
                 phaser.register();
                 CompletableFuture<Void> downloadFuture = CompletableFuture.runAsync(
@@ -198,7 +195,7 @@ public class AdaptiveHlsDownloader implements Downloader {
     }
 
     private void logProgress() {
-        this.LOGGER.info("Download > || " + formatProgress(this.downloadedSegments.size(), this.maxSegments) + " || " + formatProgress(this.validatedSegments.size(), this.maxSegments) + " || < Validation");
+        LOGGER.info("Download > || " + formatProgress(this.downloadedSegments.size(), this.maxSegments) + " || " + formatProgress(this.validatedSegments.size(), this.maxSegments) + " || < Validation");
         SwingUtilities.invokeLater(() -> {
             this.gui.progressDownload.setValue(this.downloadedSegments.size());
             this.gui.progressValidation.setValue(this.validatedSegments.size());
@@ -219,7 +216,7 @@ public class AdaptiveHlsDownloader implements Downloader {
 
     private void mergePlaylist() {
         Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
-        new VideoUtils(this.gui).mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
+        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
     }
 
     private void downloadSegment(MediaSegment segment, int index, List<MediaSegment> alternatives) {
@@ -237,18 +234,18 @@ public class AdaptiveHlsDownloader implements Downloader {
             }
 
             try {
-                this.networkUtil.downloadResource(segmentUri.toURL(), segmentsDir, formatSegmentIndex(index, this.maxSegments), this.retries);
+                NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, formatSegmentIndex(index, this.maxSegments), this.retries);
 
                 this.downloadedSegments.add(index);
                 logProgress();
             } catch (OutOfRetriesException e) {
-                this.LOGGER.warn("Download of media segment" + index + " failed - out of retries");
+                LOGGER.warn("Download of media segment" + index + " failed - out of retries");
                 if (!alternatives.isEmpty()) {
-                    this.LOGGER.info("Trying to download a lower quality media segment " + index + " instead");
+                    LOGGER.info("Trying to download a lower quality media segment " + index + " instead");
                     List<MediaSegment> nextAlternatives = alternatives.size() > 1 ? alternatives.subList(1, alternatives.size()) : Collections.emptyList();
                     this.downloadSegment(alternatives.getFirst(), index, nextAlternatives);
                 } else {
-                    this.LOGGER.warn("Download of media segment " + index + " failed - no more alternatives available to try!");
+                    LOGGER.warn("Download of media segment " + index + " failed - no more alternatives available to try!");
                     // TODO what now ... how to handle ? create empty file ? or check when creating the new playlist ?
                 }
             }
