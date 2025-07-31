@@ -9,7 +9,7 @@ A Java-based tool for downloading HLS (HTTP Live Streaming) video content with b
 ## Features
 
 - **Optional GUI**: Use either the GUI or command-line interface
-- **Parallel Download**: Uses Java virtual threads for concurrent segment downloading and validation
+- **Parallel Download**: Uses Java virtual threads for concurrent segment download and validation
 - **Retry on Error**: Automatically retries failed downloads with configurable retry limit
 - **Segment Validation**: Validates downloaded segments and re-downloads corrupted ones
 - **Video Assembly**: Uses FFmpeg to merge segments into the final video file

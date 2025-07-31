@@ -88,11 +88,10 @@ public class DownloaderBuilder {
                         return this.parseMediaPlaylist(variantUri, String.valueOf(variant.bandwidth()));
                     })
                     .toList();
+            LOGGER.info("Playlist contains multiple variants -> selecting the highest quality stream.");
         } catch (IOException e) {
-            LOGGER.warn("Supplied playlist does not seem to be a MultiVariantPlaylist!");
             final Path playlistPath = obtainPlaylist(playlistLocation, "playlist.txt"); // TODO make consts file somewhere ?
             this.playlists.add(DownloaderBuilder.parseMediaPlaylist(playlistPath));
-            LOGGER.warn("Supplied playlist is a MediaPlaylist, i.e., does not contain multiple streams to choose from. Therefore, adaptive quality switching is not possible.");
         } finally {
             if (this.gui != null) {
                 this.gui.currentState.setText(CurrentState.IDLE.toString());
@@ -150,7 +149,7 @@ public class DownloaderBuilder {
 
     public Downloader build() {
         // TODO check which Downloader to create
-        return new AdaptiveHlsDownloader(this.playlists,
+        return new HlsDownloader(this.playlists,
                 this.playlistLocation,
                 this.outputDir,
                 this.retries,

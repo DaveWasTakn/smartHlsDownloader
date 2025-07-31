@@ -22,7 +22,7 @@ public class NetworkUtil {
             try {
                 filePath = NetworkUtil.downloadResource(new URI(location).toURL(), outputDir, fileName, retries);
             } catch (URISyntaxException | MalformedURLException e) {
-                throw new RuntimeException(e); // TODO how to allow for fkd up urls ? be more lenient !!!!!
+                throw new RuntimeException(e);
             }
         } else {
             Path source = Path.of(location);

@@ -12,8 +12,8 @@ import java.awt.*;
 public class Main {
     public static void main(String[] args) {
         /* TODO:
-            - resume functionality?
-            - cleanup toggle to delete individual segments
+            - "resume" functionality?
+            - "cleanup" toggle to delete individual segments
             - mpeg-dash support
                 - https://mvnrepository.com/artifact/io.lindstrom/mpd-parser
                 - better downloader interface
@@ -26,6 +26,7 @@ public class Main {
                         - either way if playlist path is a filesystem path then URLs to the segments need to be absolute!
             - add support link
             - update README
+            - fix multivariant playlists
         */
 
         if (args.length > 0) {

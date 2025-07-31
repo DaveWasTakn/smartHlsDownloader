@@ -23,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.*;
 
-public class AdaptiveHlsDownloader implements Downloader {
+public class HlsDownloader implements Downloader {
     private static final GuiLogger LOGGER = GuiLogger.get();
 
     private final List<MediaPlaylist> playlists;
@@ -44,7 +44,7 @@ public class AdaptiveHlsDownloader implements Downloader {
 
     private final Gui gui;
 
-    public AdaptiveHlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, Gui gui) {
+    public HlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, Gui gui) {
         this.playlists = playlists;
         this.concurrentDownloads = concurrentDownloads;
         this.concurrentValidations = concurrentValidations;
@@ -173,7 +173,7 @@ public class AdaptiveHlsDownloader implements Downloader {
     ) {
         try {
             validationSem.acquire();
-            boolean isValid = this.validateSegment(this.segmentsDir.resolve(AdaptiveHlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
+            boolean isValid = this.validateSegment(this.segmentsDir.resolve(HlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
             if (!isValid && validationRetries > 0) {    // retry downloading and validating for validationRetries many times
                 LOGGER.warn("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
                 this.downloadedSegments.remove(index);
