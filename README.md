@@ -8,7 +8,7 @@ A Java-based tool for downloading HLS (HTTP Live Streaming) video content with b
 
 ## Features
 
-- **Dual Interface**: Use either the GUI or command-line interface
+- **Optional GUI**: Use either the GUI or command-line interface
 - **Parallel Download**: Uses Java virtual threads for concurrent segment downloading and validation
 - **Retry on Error**: Automatically retries failed downloads with configurable retry limit
 - **Segment Validation**: Validates downloaded segments and re-downloads corrupted ones
@@ -83,7 +83,7 @@ Fast download with validation disabled:
 
 ```shell
 java -jar smartHlsDownloader-1.0-SNAPSHOT.jar \
-  -sv -c 25 "https://example.com/playlist.m3u8"
+  -sv -c 20 "https://example.com/playlist.m3u8"
 ```
 
 ## License
