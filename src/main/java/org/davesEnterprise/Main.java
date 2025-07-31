@@ -11,8 +11,22 @@ import java.awt.*;
 
 public class Main {
     public static void main(String[] args) {
-        // TODO adaptiveness ? ie lower quality segments
-        // TODO MPEG-DASH support ? https://mvnrepository.com/artifact/io.lindstrom/mpd-parser ?
+        /* TODO:
+            - resume functionality?
+            - cleanup toggle to delete individual segments
+            - mpeg-dash support
+                - https://mvnrepository.com/artifact/io.lindstrom/mpd-parser
+                - better downloader interface
+                - refactor downloader builder
+            - look into selecting lower quality segments whenever retries exhausted
+                - probably tricky because the different quality stream segments dont line up exactly sometimes
+            - general refactoring
+                - fix URI handling, i.e. fix file system paths
+                    - only allow filesystem paths for playlists ?? Or allow individual segments to be filesystempaths??
+                        - either way if playlist path is a filesystem path then URLs to the segments need to be absolute!
+            - add support link
+            - update README
+        */
 
         if (args.length > 0) {
             GuiLogger.init(new Gui()); // dummy GUI
