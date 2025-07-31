@@ -26,7 +26,6 @@ public class Main {
                         - either way if playlist path is a filesystem path then URLs to the segments need to be absolute!
             - add support link
             - update README
-            - fix multivariant playlists
         */
 
         if (args.length > 0) {

@@ -5,6 +5,7 @@ import io.lindstrom.m3u8.model.MultivariantPlaylist;
 import io.lindstrom.m3u8.model.Variant;
 import io.lindstrom.m3u8.parser.MediaPlaylistParser;
 import io.lindstrom.m3u8.parser.MultivariantPlaylistParser;
+import io.lindstrom.m3u8.parser.ParsingMode;
 import org.davesEnterprise.Gui;
 import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
@@ -12,6 +13,7 @@ import org.davesEnterprise.network.NetworkUtil;
 import org.davesEnterprise.util.GuiLogger;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -76,7 +78,7 @@ public class DownloaderBuilder {
         }
         try {
             final Path playlistPath = obtainPlaylist(playlistLocation, "multiVariantPlaylist.txt");
-            final MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser().readPlaylist(playlistPath);
+            final MultivariantPlaylist multivariantPlaylist = new MultivariantPlaylistParser(ParsingMode.LENIENT).readPlaylist(playlistPath);
             System.out.println(multivariantPlaylist); // TODO print some info/stats i.e. how many variants or smth
             this.playlists = multivariantPlaylist.variants().stream()
                     .sorted(Comparator.comparingLong(Variant::bandwidth).reversed())
@@ -85,7 +87,23 @@ public class DownloaderBuilder {
                         if (NetworkUtil.isURL(playlistLocation) && !NetworkUtil.isURL(variantUri)) {
                             variantUri = URI.create(playlistLocation).resolve(variantUri).toString();
                         }
-                        return this.parseMediaPlaylist(variantUri, String.valueOf(variant.bandwidth()));
+                        MediaPlaylist mediaPlaylist = this.parseMediaPlaylist(variantUri, String.valueOf(variant.bandwidth()));
+                        if (!NetworkUtil.isURL(variant.uri()) && Path.of(variant.uri()).getNameCount() > 1) { // the multivariant playlist contains different base uris ...
+                            LOGGER.warn("The multivariant playlist contains different base URIs ... prepending intermediate path-segments to the uris of the individual media-segments.");
+                            mediaPlaylist.mediaSegments().forEach(segment -> {
+                                if (!URI.create(segment.uri()).isAbsolute()) {  // prepend the intermediate uri part to the segments uri
+                                    try {
+                                        Field uriField = segment.getClass().getDeclaredField("uri");
+                                        uriField.setAccessible(true);
+                                        uriField.set(segment, Path.of(variant.uri()).normalize().getParent().resolve(segment.uri()).toString().replace("\\", "/"));
+                                    } catch (NoSuchFieldException | IllegalAccessException e) {
+                                        LOGGER.error(e.getMessage());
+                                        throw new RuntimeException(e);
+                                    }
+                                }
+                            });
+                        }
+                        return mediaPlaylist;
                     })
                     .toList();
             LOGGER.info("Playlist contains multiple variants -> selecting the highest quality stream.");
