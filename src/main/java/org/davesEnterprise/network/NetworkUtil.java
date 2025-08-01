@@ -26,7 +26,7 @@ public class NetworkUtil {
             }
         } else {
             Path source = Path.of(location);
-            filePath = Path.of(String.valueOf(outputDir), fileName);
+            filePath = outputDir.resolve(fileName);
             try {
                 Files.copy(source, filePath, StandardCopyOption.REPLACE_EXISTING);
             } catch (IOException e) {

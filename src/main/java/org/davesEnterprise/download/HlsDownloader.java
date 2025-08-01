@@ -18,6 +18,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
@@ -222,6 +223,7 @@ public class HlsDownloader implements Downloader {
     }
 
     private void downloadSegment(MediaSegment segment, int index, List<MediaSegment> alternatives) {
+        // Filepath:
         if (!NetworkUtil.isURL(String.valueOf(this.playlistLocation)) && !NetworkUtil.isURL(segment.uri())) {
             // The playlistLocation is not a URL, i.e., it must be a path, and the segment is either a relative URL (which would ofc be invalid) or a Path to the segment (either relative or absolute)
             try {
@@ -229,7 +231,12 @@ public class HlsDownloader implements Downloader {
                 if (!segmentUri.isAbsolute()) {
                     segmentUri = this.playlistLocation.resolve(segment.uri());
                 }
-                Files.copy(Path.of(segmentUri), segmentsDir.resolve(formatSegmentIndex(index, this.maxSegments)));  // Copy the segment into the segmentsDir with the index as filename - just like a downloaded segment
+                Path source = Path.of(segmentUri);
+                Path target = segmentsDir.resolve(formatSegmentIndex(index, this.maxSegments));
+                Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
+
+                this.downloadedSegments.add(index);
+                logProgress();
                 return;
             } catch (URISyntaxException | IOException e) {
                 LOGGER.error("Failed to copy segment " + index + ": " + e.getMessage());
@@ -237,6 +244,7 @@ public class HlsDownloader implements Downloader {
             }
         }
 
+        // URL:
         try {
             URI segmentUri = new URI(segment.uri());
             if (!segmentUri.isAbsolute()) {
@@ -249,7 +257,7 @@ public class HlsDownloader implements Downloader {
                 this.downloadedSegments.add(index);
                 logProgress();
             } catch (OutOfRetriesException e) {
-                LOGGER.warn("Download of media segment" + index + " failed - out of retries");
+                LOGGER.warn("Download of media segment " + index + " failed - out of retries");
                 if (!alternatives.isEmpty()) {
                     LOGGER.info("Trying to download a lower quality media segment " + index + " instead");
                     List<MediaSegment> nextAlternatives = alternatives.size() > 1 ? alternatives.subList(1, alternatives.size()) : Collections.emptyList();
@@ -263,6 +271,7 @@ public class HlsDownloader implements Downloader {
             throw new RuntimeException(e);
         }
     }
+
 
     private static String formatSegmentIndex(int index, int maxSegments) {
         return String.format("%0" + String.valueOf(maxSegments).length() + "d", index);

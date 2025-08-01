@@ -86,7 +86,11 @@ public class DownloaderBuilder {
                         String variantUri = variant.uri();
                         if (NetworkUtil.isURL(playlistLocation) && !NetworkUtil.isURL(variantUri)) {
                             variantUri = URI.create(playlistLocation).resolve(variantUri).toString();
+                        } else if (!NetworkUtil.isURL(playlistLocation) && !NetworkUtil.isURL(variantUri)) {
+                            Path variantPath = Path.of(playlistLocation).getParent().resolve(variantUri);
+                            variantUri = variantPath.toString();
                         }
+
                         MediaPlaylist mediaPlaylist = this.parseMediaPlaylist(variantUri, String.valueOf(variant.bandwidth()));
                         if (!NetworkUtil.isURL(variant.uri()) && Path.of(variant.uri()).getNameCount() > 1) { // the multivariant playlist contains different base uris ...
                             LOGGER.warn("The multivariant playlist contains different base URIs ... prepending intermediate path-segments to the uris of the individual media-segments.");
