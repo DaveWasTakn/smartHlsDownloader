@@ -2,6 +2,7 @@ package org.davesEnterprise.download;
 
 import io.lindstrom.m3u8.model.MediaPlaylist;
 import io.lindstrom.m3u8.model.MediaSegment;
+import org.apache.commons.io.FileUtils;
 import org.davesEnterprise.Gui;
 import org.davesEnterprise.enums.CurrentState;
 import org.davesEnterprise.enums.SegmentValidation;
@@ -32,11 +33,12 @@ public class HlsDownloader implements Downloader {
     private final int concurrentValidations;
     private final SegmentValidation segmentValidation;
     private final boolean resume;
-    private final String fileName;
+    private final Path outputFilePath;
     private final URI playlistLocation;
     private final Path outputDir;
     private final Path segmentsDir;
     private final int retries;
+    private final boolean keepSegments;
 
     private final int maxSegments;
     private final Set<Integer> downloadedSegments = ConcurrentHashMap.newKeySet();
@@ -44,13 +46,14 @@ public class HlsDownloader implements Downloader {
 
     private final Gui gui;
 
-    public HlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, Gui gui) {
+    public HlsDownloader(List<MediaPlaylist> playlists, String playlistLocation, Path outputDir, int retries, int concurrentDownloads, int concurrentValidations, SegmentValidation segmentValidation, String fileName, boolean resume, boolean keepSegments, Gui gui) {
         this.playlists = playlists;
         this.concurrentDownloads = concurrentDownloads;
         this.concurrentValidations = concurrentValidations;
+        this.retries = retries;
         this.segmentValidation = segmentValidation;
         this.resume = resume;
-        this.fileName = fileName;
+        this.keepSegments = keepSegments;
 
         this.gui = gui != null ? gui : new Gui();
         this.maxSegments = this.playlists.getFirst().mediaSegments().size();
@@ -72,7 +75,7 @@ public class HlsDownloader implements Downloader {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        this.retries = retries;
+        this.outputFilePath = this.outputDir.resolve(fileName.matches(".+\\.\\S+$") ? fileName : fileName + ".mp4");
     }
 
     private void initGui() {
@@ -100,9 +103,36 @@ public class HlsDownloader implements Downloader {
 
         this.gui.currentState.setText(CurrentState.MERGING.toString());
 
-        mergePlaylist();
+        boolean finished = mergePlaylist();
 
-        this.gui.currentState.setText(CurrentState.FINISHED.toString());
+        if (finished) {
+            this.gui.currentState.setText(CurrentState.FINISHED.toString());
+            if (!this.keepSegments) {
+                this.cleanupFiles();
+            } else {
+                LOGGER.info("Done! Video created at: " + this.outputFilePath.toAbsolutePath());
+            }
+        } else {
+            this.gui.currentState.setText(CurrentState.ERROR.toString());
+        }
+    }
+
+    private void cleanupFiles() {
+        Path fileName = this.outputFilePath.getFileName();
+        Path parentDir = this.outputDir.getParent();
+        Path tempDir = outputDir.resolveSibling(outputDir.getFileName() + "_delme");
+        Path targetFile = parentDir.resolve(fileName);
+        try {
+            Files.move(this.outputDir, tempDir);
+
+            Files.copy(tempDir.resolve(fileName), targetFile, StandardCopyOption.REPLACE_EXISTING);
+            LOGGER.info("Done! Video created at: " + targetFile.toAbsolutePath());
+
+            FileUtils.deleteDirectory(tempDir.toFile());
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 
     private void download(List<List<MediaSegment>> segmentsTransposed) {
@@ -217,9 +247,9 @@ public class HlsDownloader implements Downloader {
         };
     }
 
-    private void mergePlaylist() {
+    private boolean mergePlaylist() {
         Path newPlaylist = VideoUtils.adjustPlaylist(this.playlists.getFirst(), this.segmentsDir);
-        VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputDir.resolve(this.fileName + ".mp4"));
+        return VideoUtils.mergePlaylist(newPlaylist, this.segmentsDir, this.outputFilePath);
     }
 
     private void downloadSegment(MediaSegment segment, int index, List<MediaSegment> alternatives) {

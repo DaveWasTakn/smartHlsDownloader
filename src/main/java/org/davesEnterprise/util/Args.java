@@ -23,11 +23,17 @@ public class Args {
     )
     public int concurrentValidations = 10;
 
+//    @Parameter( TODO ?
+//            names = {"--resume"},
+//            description = "Resume downloading in an existing output directory"
+//    )
+//    public boolean resume = false;
+
     @Parameter(
-            names = {"--continue"},
-            description = "Continue downloading in an existing output directory"
+            names = {"-k", "--keep-segments"},
+            description = "Keep all individual segments"
     )
-    public boolean resume = false;
+    public boolean keepSegments = false;
 
     @Parameter(
             names = {"-o", "--output"},

@@ -1,6 +1,7 @@
 package org.davesEnterprise.util;
 
 import org.davesEnterprise.Gui;
+import org.davesEnterprise.enums.CurrentState;
 
 import javax.swing.*;
 import java.util.logging.Level;
@@ -35,6 +36,8 @@ public class GuiLogger {
     }
 
     public void error(String message) {
+        this.gui.logButtonPressed(null);
+        this.gui.currentState.setText(CurrentState.ERROR.toString());
         log(Level.SEVERE, message);
     }
 

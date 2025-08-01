@@ -26,6 +26,7 @@ public class Main {
                         - either way if playlist path is a filesystem path then URLs to the segments need to be absolute!
             - add support link
             - update README
+            - think of removing support for file paths everywhere -- very convoluted URI checking and resolving
         */
 
         if (args.length > 0) {
@@ -38,7 +39,8 @@ public class Main {
                     .setPlaylist(arguments.playlistUrl)
                     .setConcurrentDownloads(arguments.concurrentDownloads)
                     .setConcurrentValidations(arguments.concurrentValidations)
-                    .setResume(arguments.resume) // TODO implement resume functionality ?
+//                    .setResume(arguments.resume) // TODO implement resume functionality ?
+                    .setKeepSegments(arguments.keepSegments)
                     .setSegmentValidation(arguments.segmentValidation)
                     .build();
 

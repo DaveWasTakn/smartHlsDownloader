@@ -35,6 +35,7 @@ public class DownloaderBuilder {
     private int concurrentDownloads;
     private int concurrentValidations;
     private boolean resume;
+    private boolean keepSegments;
     private SegmentValidation segmentValidation;
     private Gui gui;
 
@@ -61,6 +62,9 @@ public class DownloaderBuilder {
         try {
             Files.createDirectories(this.playlistsOutputDir);
         } catch (IOException e) {
+            if (Files.exists(this.outputDir)) {
+                LOGGER.error("A file or directory with the name :" + this.outputDir + " already exists!! Choose another name -> pls do NOT specify a file extension in the output option");
+            }
             throw new RuntimeException(e);
         }
     }
@@ -164,6 +168,11 @@ public class DownloaderBuilder {
         return this;
     }
 
+    public DownloaderBuilder setKeepSegments(boolean keepSegments) {
+        this.keepSegments = keepSegments;
+        return this;
+    }
+
     public DownloaderBuilder setGui(Gui gui) {
         this.gui = gui;
         return this;
@@ -180,6 +189,7 @@ public class DownloaderBuilder {
                 this.segmentValidation,
                 this.fileName,
                 this.resume,
+                this.keepSegments,
                 this.gui
         );
     }

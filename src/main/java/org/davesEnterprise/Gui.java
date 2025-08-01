@@ -35,6 +35,7 @@ public class Gui extends JPanel {
     public JButton start;
     public JTextField workingDir;
     public JScrollPane uri_scrollPane;
+    private JCheckBox keepSegmentsCheckBox;
 
 
     public Gui() {
@@ -54,7 +55,7 @@ public class Gui extends JPanel {
         this.logButton.addActionListener(this::logButtonPressed);
     }
 
-    private void logButtonPressed(ActionEvent actionEvent) {
+    public void logButtonPressed(ActionEvent actionEvent) {
         this.showLog = !this.showLog;
         this.logs_scrollPane.setVisible(this.showLog);
         this.logButton.setText(this.showLog ? "Hide Log" : "Show Log");
@@ -81,6 +82,7 @@ public class Gui extends JPanel {
                         .setConcurrentDownloads((Integer) this.downloads.getValue())
                         .setConcurrentValidations((Integer) this.validations.getValue())
                         .setRetries((Integer) this.retries.getValue())
+                        .setKeepSegments(this.keepSegmentsCheckBox.isSelected())
                         .build().start()
         ).thenRun(() -> SwingUtilities.invokeLater(() -> this.start.setEnabled(true)));
     }
@@ -341,6 +343,13 @@ public class Gui extends JPanel {
         uri.setToolTipText("The URI to the M3U8 HLS playlist. E.g., https://www.example.com/video/playlist.m3u8");
         uri.setWrapStyleWord(false);
         uri_scrollPane.setViewportView(uri);
+        keepSegmentsCheckBox = new JCheckBox();
+        keepSegmentsCheckBox.setText("Keep Segments");
+        gbc = new GridBagConstraints();
+        gbc.gridx = 4;
+        gbc.gridy = 8;
+        gbc.anchor = GridBagConstraints.EAST;
+        mainPanel.add(keepSegmentsCheckBox, gbc);
     }
 
     /**

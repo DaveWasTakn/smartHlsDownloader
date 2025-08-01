@@ -5,7 +5,8 @@ public enum CurrentState {
     PARSING_PLAYLIST("Parsing Playlist..."),
     DOWNLOADING("Downloading..."),
     MERGING("Merging..."),
-    FINISHED("Finished!");
+    FINISHED("Finished!"),
+    ERROR("ERROR :(");
 
     private final String label;
 

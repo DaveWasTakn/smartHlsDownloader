@@ -71,7 +71,7 @@ public class VideoUtils {
     }
 
 
-    public static void mergePlaylist(Path newPlaylistPath, Path workingDir, Path videoFilePath) {
+    public static boolean mergePlaylist(Path newPlaylistPath, Path workingDir, Path videoFilePath) {
         // TODO handle missing segments!!!!!!!!!!
         try {
             String[] cmd = {
@@ -83,9 +83,11 @@ public class VideoUtils {
                     videoFilePath.toAbsolutePath().toString()
             };
             LOGGER.info("Executing command: " + String.join(" ", cmd));
-            if (executeCmd(workingDir, cmd, false) == 0) {
-                LOGGER.info("Done! Video created at: " + videoFilePath.toAbsolutePath());
+            int ret = executeCmd(workingDir, cmd, false);
+            if (ret != 0) {
+                LOGGER.error("Failed to merge segments :( ! Using cmd: " + String.join(" ", cmd));
             }
+            return ret == 0;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new RuntimeException(e);
