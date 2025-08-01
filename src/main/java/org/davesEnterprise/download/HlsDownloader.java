@@ -33,7 +33,6 @@ public class HlsDownloader implements Downloader {
     private final boolean resume;
     private final String fileName;
     private final URI playlistLocation;
-    private final boolean playlistIsUrl;
     private final Path outputDir;
     private final Path segmentsDir;
     private final int retries;
@@ -57,8 +56,11 @@ public class HlsDownloader implements Downloader {
         this.initGui();
 
         try {
-            this.playlistLocation = new URI(playlistLocation);
-            this.playlistIsUrl = NetworkUtil.isURL(playlistLocation);
+            if (NetworkUtil.isURL(playlistLocation)) {
+                this.playlistLocation = new URI(playlistLocation);
+            } else {
+                this.playlistLocation = Path.of(playlistLocation).toUri();
+            }
         } catch (URISyntaxException e) {
             throw new RuntimeException(e);
         }
@@ -220,11 +222,19 @@ public class HlsDownloader implements Downloader {
     }
 
     private void downloadSegment(MediaSegment segment, int index, List<MediaSegment> alternatives) {
-        if (!this.playlistIsUrl) {
-            // TODO generally handle filepaths ? maybe just copy them into the dir (with index as filename!!) or smth
-            // and it could be fkd ... could be a file path to the playlist but then the segments need to be downloaded
-            // for which they must ofc be absolute urls
-            throw new RuntimeException("Playlist is not a url ... not implemented");
+        if (!NetworkUtil.isURL(String.valueOf(this.playlistLocation)) && !NetworkUtil.isURL(segment.uri())) {
+            // The playlistLocation is not a URL, i.e., it must be a path, and the segment is either a relative URL (which would ofc be invalid) or a Path to the segment (either relative or absolute)
+            try {
+                URI segmentUri = new URI(segment.uri());
+                if (!segmentUri.isAbsolute()) {
+                    segmentUri = this.playlistLocation.resolve(segment.uri());
+                }
+                Files.copy(Path.of(segmentUri), segmentsDir.resolve(formatSegmentIndex(index, this.maxSegments)));  // Copy the segment into the segmentsDir with the index as filename - just like a downloaded segment
+                return;
+            } catch (URISyntaxException | IOException e) {
+                LOGGER.error("Failed to copy segment " + index + ": " + e.getMessage());
+                throw new RuntimeException(e);
+            }
         }
 
         try {
@@ -259,4 +269,3 @@ public class HlsDownloader implements Downloader {
     }
 
 }
-
