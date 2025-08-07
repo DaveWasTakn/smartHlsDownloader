@@ -1,0 +1,39 @@
+name: Build and Release JAR
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'oracle'
+          java-version: '24'
+
+      - name: Maven build
+        run: mvn clean package
+
+      - name: Generate timestamp
+        id: vars
+        run: echo "TAG=nightly-$(date +'%Y%m%d-%H%M%S')" >> $GITHUB_ENV
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG }}
+          name: "Nightly Build ${{ env.TAG }}"
+          body: "Automated build from commit ${{ github.sha }}"
+          files: target/smartHlsDownloader*.jar
+          prerelease: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
