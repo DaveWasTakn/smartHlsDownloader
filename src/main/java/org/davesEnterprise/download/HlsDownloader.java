@@ -206,7 +206,7 @@ public class HlsDownloader implements Downloader {
     ) {
         try {
             validationSem.acquire();
-            boolean isValid = this.validateSegment(this.segmentsDir.resolve(HlsDownloader.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
+            boolean isValid = this.validateSegment(this.segmentsDir.resolve(VideoUtils.formatSegmentIndex(index, this.maxSegments)), this.segmentValidation);
             if (!isValid && validationRetries > 0) {    // retry downloading and validating for validationRetries many times
                 LOGGER.warn("Segment " + index + " is invalid! Retrying download! (validationRetries left: " + validationRetries + ")");
                 this.downloadedSegments.remove(index);
@@ -262,7 +262,7 @@ public class HlsDownloader implements Downloader {
                     segmentUri = this.playlistLocation.resolve(segment.uri());
                 }
                 Path source = Path.of(segmentUri);
-                Path target = segmentsDir.resolve(formatSegmentIndex(index, this.maxSegments));
+                Path target = segmentsDir.resolve(VideoUtils.formatSegmentIndex(index, this.maxSegments));
                 Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING);
 
                 this.downloadedSegments.add(index);
@@ -282,7 +282,7 @@ public class HlsDownloader implements Downloader {
             }
 
             try {
-                NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, formatSegmentIndex(index, this.maxSegments), this.retries);
+                NetworkUtil.downloadResource(segmentUri.toURL(), segmentsDir, VideoUtils.formatSegmentIndex(index, this.maxSegments), this.retries);
 
                 this.downloadedSegments.add(index);
                 logProgress();
@@ -300,11 +300,6 @@ public class HlsDownloader implements Downloader {
         } catch (MalformedURLException | URISyntaxException e) {
             throw new RuntimeException(e);
         }
-    }
-
-
-    private static String formatSegmentIndex(int index, int maxSegments) {
-        return String.format("%0" + String.valueOf(maxSegments).length() + "d", index);
     }
 
 }

@@ -19,15 +19,18 @@ public class VideoUtils {
 
     private static final GuiLogger LOGGER = GuiLogger.get();
 
+    public static String formatSegmentIndex(int index, int maxSegments) {
+        return String.format("%0" + String.valueOf(maxSegments).length() + "d", index) + ".ts";
+    }
+
     public static Path adjustPlaylist(MediaPlaylist playlist, Path outputDir) {
         List<MediaSegment> segments = playlist.mediaSegments();
-        int maxSegments_len = String.valueOf(segments.size()).length();
         MediaPlaylist newPlaylist = MediaPlaylist.builder().from(playlist).mediaSegments(
                 IntStream.range(0, playlist.mediaSegments().size())
                         .mapToObj(
                                 i -> MediaSegment.builder()
                                         .from(segments.get(i))
-                                        .uri(String.format("%0" + maxSegments_len + "d", i))
+                                        .uri(formatSegmentIndex(i, segments.size()))
                                         .build()
                         )
                         .toList()
