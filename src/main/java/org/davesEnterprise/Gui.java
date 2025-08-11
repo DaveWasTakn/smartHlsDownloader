@@ -46,7 +46,7 @@ public class Gui extends JPanel {
         this.workingDir.setText(String.valueOf(defaultWorkingDir()));
 
         this.validationType.setModel(new DefaultComboBoxModel<>(SegmentValidation.values()));
-        this.validationType.setSelectedItem(SegmentValidation.DECODE);
+        this.validationType.setSelectedItem(SegmentValidation.METADATA);
 
         this.currentState.setText(CurrentState.IDLE.toString());
         this.logs_scrollPane.setVisible(this.showLog);
